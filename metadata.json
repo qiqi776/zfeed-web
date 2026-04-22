@@ -1,0 +1,6 @@
+{
+  "name": "zfeed",
+  "description": "A modern React and Tailwind CSS implementation of the zfeed feed interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
