@@ -32,7 +32,12 @@ export const contentApi = {
   getDetail: async (content_id: string): Promise<ContentDetail> => {
     return api.post("/content/detail", { content_id });
   },
-  publishPost: async (params: PublishPostParams): Promise<{ content_id: string }> => {
+  publishPost: async (
+    params: PublishPostParams,
+  ): Promise<{ content_id: string }> => {
     return api.post("/content/publish", params);
-  }
+  },
+  deletePost: async (content_id: string): Promise<void> => {
+    return api.delete("/content", { data: { content_id } });
+  },
 };

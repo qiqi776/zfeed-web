@@ -8,12 +8,14 @@ import {
   CornerDownRight,
   Loader2,
   Bookmark,
+  Trash2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Comment, Post } from "../data/mockData";
 import { UserHoverCard } from "./UserHoverCard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { interactionApi, CommentItem } from "../api/interaction";
+import { contentApi } from "../api/content";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
 
@@ -21,6 +23,7 @@ export function PostDetail({ post }: { post: Post }) {
   const [commentText, setCommentText] = useState("");
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [isDownvoted, setIsDownvoted] = useState(false);
@@ -141,6 +144,27 @@ export function PostDetail({ post }: { post: Post }) {
     postCommentMutation.mutate(commentText);
   };
 
+  const deletePostMutation = useMutation({
+    mutationFn: () => contentApi.deletePost(post.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recommendFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["userFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      toast.success("Post deleted");
+      navigate("/");
+    },
+    onError: () => {
+      toast.error("Failed to delete post");
+    },
+  });
+
+  const handleDeletePost = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (confirm("Are you sure you want to delete this post?")) {
+      deletePostMutation.mutate();
+    }
+  };
+
   const displayComments = commentsData?.comments || [];
 
   return (
@@ -248,6 +272,17 @@ export function PostDetail({ post }: { post: Post }) {
           </button>
 
           <div className="flex-1" />
+
+          {user && user.user_id === post.author && (
+            <button
+              onClick={handleDeletePost}
+              disabled={deletePostMutation.isPending}
+              className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
+              title="Delete Post"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
 
           <button
             onClick={handleFavorite}
@@ -424,6 +459,26 @@ const RealCommentThread: React.FC<{
     replyCommentMutation.mutate(replyText);
   };
 
+  const deleteCommentMutation = useMutation({
+    mutationFn: () =>
+      interactionApi.deleteComment({
+        comment_id: comment.comment_id,
+        content_id: post_id,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["replies", actualRootId] });
+      queryClient.invalidateQueries({ queryKey: ["comments", post_id] });
+      toast.success("Comment deleted");
+    },
+    onError: () => toast.error("Failed to delete comment"),
+  });
+
+  const handleDeleteComment = () => {
+    if (confirm("Are you sure you want to delete this comment?")) {
+      deleteCommentMutation.mutate();
+    }
+  };
+
   return (
     <div className="flex gap-2">
       <div className="flex flex-col items-center">
@@ -498,6 +553,19 @@ const RealCommentThread: React.FC<{
             <Share className="h-3 w-3 text-[#82959B]" />
             <span className="text-xs font-bold text-[#82959B]">Share</span>
           </button>
+
+          {user && user.user_id === comment.user_id && (
+            <button
+              onClick={handleDeleteComment}
+              disabled={deleteCommentMutation.isPending}
+              className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B]"
+              title="Delete Comment"
+            >
+              <Trash2 className="h-3 w-3" />
+              <span className="text-xs font-bold">Delete</span>
+            </button>
+          )}
+
           <button className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-[#2A3C42]">
             <MoreHorizontal className="h-4 w-4 text-[#82959B]" />
           </button>

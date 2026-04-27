@@ -5,6 +5,7 @@ import {
   Share,
   MoreHorizontal,
   Bookmark,
+  Trash2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -13,6 +14,8 @@ import { UserHoverCard } from "./UserHoverCard";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
 import { interactionApi } from "../api/interaction";
+import { contentApi } from "../api/content";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 
 interface PostCardProps {
   post: Post;
@@ -20,9 +23,12 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [isDownvoted, setIsDownvoted] = useState(false);
-  const [upvoteCount, setUpvoteCount] = useState(post.upvoteCount || parseInt(post.upvotes) || 0);
+  const [upvoteCount, setUpvoteCount] = useState(
+    post.upvoteCount || parseInt(post.upvotes) || 0,
+  );
   const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -36,15 +42,15 @@ export function PostCard({ post }: PostCardProps) {
     try {
       if (isLiked) {
         setIsLiked(false);
-        setUpvoteCount(prev => prev - 1);
+        setUpvoteCount((prev) => prev - 1);
         await interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" });
       } else {
         setIsLiked(true);
         if (isDownvoted) {
-            setIsDownvoted(false);
-            setUpvoteCount(prev => prev + 2);
+          setIsDownvoted(false);
+          setUpvoteCount((prev) => prev + 2);
         } else {
-            setUpvoteCount(prev => prev + 1);
+          setUpvoteCount((prev) => prev + 1);
         }
         await interactionApi.like({ content_id: post.id, scene: "ARTICLE" });
       }
@@ -65,15 +71,17 @@ export function PostCard({ post }: PostCardProps) {
 
     if (isDownvoted) {
       setIsDownvoted(false);
-      setUpvoteCount(prev => prev + 1);
+      setUpvoteCount((prev) => prev + 1);
     } else {
       setIsDownvoted(true);
       if (isLiked) {
         setIsLiked(false);
-        setUpvoteCount(prev => prev - 2);
-        interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" }).catch(() => {});
+        setUpvoteCount((prev) => prev - 2);
+        interactionApi
+          .unlike({ content_id: post.id, scene: "ARTICLE" })
+          .catch(() => {});
       } else {
-        setUpvoteCount(prev => prev - 1);
+        setUpvoteCount((prev) => prev - 1);
       }
     }
   };
@@ -89,16 +97,43 @@ export function PostCard({ post }: PostCardProps) {
     try {
       if (isFavorited) {
         setIsFavorited(false);
-        await interactionApi.unfavorite({ content_id: post.id, scene: "ARTICLE" });
+        await interactionApi.unfavorite({
+          content_id: post.id,
+          scene: "ARTICLE",
+        });
         toast.success("Post removed from favorites");
       } else {
         setIsFavorited(true);
-        await interactionApi.favorite({ content_id: post.id, scene: "ARTICLE" });
+        await interactionApi.favorite({
+          content_id: post.id,
+          scene: "ARTICLE",
+        });
         toast.success("Post saved to favorites");
       }
     } catch (err) {
       setIsFavorited(!isFavorited);
       toast.error("Failed to update favorite status");
+    }
+  };
+
+  const deletePostMutation = useMutation({
+    mutationFn: () => contentApi.deletePost(post.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recommendFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["userFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      toast.success("Post deleted");
+    },
+    onError: () => {
+      toast.error("Failed to delete post");
+    },
+  });
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete this post?")) {
+      deletePostMutation.mutate();
     }
   };
 
@@ -109,7 +144,10 @@ export function PostCard({ post }: PostCardProps) {
         {/* Post Header */}
         <div className="flex items-center gap-2 text-xs text-[#82959B] pointer-events-auto">
           <div className="relative group z-20 pointer-events-auto block">
-            <Link to={`/user/${post.authorId || post.author}`} className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20 hover:ring-2 hover:ring-[#82959B] cursor-pointer">
+            <Link
+              to={`/user/${post.authorId || post.author}`}
+              className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20 hover:ring-2 hover:ring-[#82959B] cursor-pointer"
+            >
               {post.subredditIcon ? (
                 <img
                   src={post.subredditIcon}
@@ -117,7 +155,11 @@ export function PostCard({ post }: PostCardProps) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.author}&backgroundColor=b6e3f4,c0aede,d1d4f9`} alt={post.author} className="h-full w-full object-cover" />
+                <img
+                  src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.author}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                  alt={post.author}
+                  className="h-full w-full object-cover"
+                />
               )}
             </Link>
             <UserHoverCard username={post.author} />
@@ -129,8 +171,14 @@ export function PostCard({ post }: PostCardProps) {
             <span className="opacity-50">•</span>
             <span className="opacity-50">Posted by </span>
             <div className="relative group z-20 pointer-events-auto block">
-              <Link to={`/user/${post.authorId || post.author}`} onClick={(e) => e.stopPropagation()} className="opacity-50 hover:opacity-100 hover:text-[#D7DADC] hover:underline transition">u/{post.author}</Link>
-               <UserHoverCard username={post.author} />
+              <Link
+                to={`/user/${post.authorId || post.author}`}
+                onClick={(e) => e.stopPropagation()}
+                className="opacity-50 hover:opacity-100 hover:text-[#D7DADC] hover:underline transition"
+              >
+                u/{post.author}
+              </Link>
+              <UserHoverCard username={post.author} />
             </div>
             <span className="opacity-50"> {post.timeAgo}</span>
           </div>
@@ -165,25 +213,36 @@ export function PostCard({ post }: PostCardProps) {
         <div className="flex items-center gap-2 p-3 sm:px-4 sm:pb-4 sm:pt-2 z-10">
           {/* Vote Counter Oval */}
           <div className="flex items-center rounded-full bg-[#2A3C42] pointer-events-auto">
-            <button 
-               onClick={handleLike} 
-               className={`flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23] ${isLiked ? 'text-[#FF4500]' : 'text-[#82959B]'}`}
+            <button
+              onClick={handleLike}
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23] ${isLiked ? "text-[#FF4500]" : "text-[#82959B]"}`}
             >
-               <ArrowBigUp className={`h-5 w-5 ${isLiked ? 'text-[#FF4500] fill-[#FF4500]' : 'hover:text-[#FF4500]'}`} />
+              <ArrowBigUp
+                className={`h-5 w-5 ${isLiked ? "text-[#FF4500] fill-[#FF4500]" : "hover:text-[#FF4500]"}`}
+              />
             </button>
-            <span className={`min-w-6 text-center text-sm font-bold ${isLiked ? 'text-[#FF4500]' : isDownvoted ? 'text-[#7193FF]' : 'text-[#D7DADC]'}`}>
-              {upvoteCount > 1000 ? (upvoteCount/1000).toFixed(1) + 'k' : upvoteCount}
+            <span
+              className={`min-w-6 text-center text-sm font-bold ${isLiked ? "text-[#FF4500]" : isDownvoted ? "text-[#7193FF]" : "text-[#D7DADC]"}`}
+            >
+              {upvoteCount > 1000
+                ? (upvoteCount / 1000).toFixed(1) + "k"
+                : upvoteCount}
             </span>
             <button
-               onClick={handleDownvote}
-               className={`flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23] ${isDownvoted ? 'text-[#7193FF]' : 'text-[#82959B]'}`}
+              onClick={handleDownvote}
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23] ${isDownvoted ? "text-[#7193FF]" : "text-[#82959B]"}`}
             >
-              <ArrowBigDown className={`h-5 w-5 ${isDownvoted ? 'text-[#7193FF] fill-[#7193FF]' : 'hover:text-[#7193FF]'}`} />
+              <ArrowBigDown
+                className={`h-5 w-5 ${isDownvoted ? "text-[#7193FF] fill-[#7193FF]" : "hover:text-[#7193FF]"}`}
+              />
             </button>
           </div>
 
           {/* Comments Oval */}
-          <Link to={`/post/${post.id}`} className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto">
+          <Link
+            to={`/post/${post.id}`}
+            className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto"
+          >
             <MessageSquare className="h-4 w-4 text-[#82959B]" />
             <span className="text-sm font-bold text-[#D7DADC]">
               {post.comments} Comments
@@ -199,13 +258,26 @@ export function PostCard({ post }: PostCardProps) {
           </button>
 
           <div className="flex-1" />
-          
+
+          {user && user.user_id === post.author && (
+            <button
+              onClick={handleDelete}
+              disabled={deletePostMutation.isPending}
+              className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
+              title="Delete Post"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+
           {/* Save/Favorite */}
-          <button 
-             onClick={handleFavorite}
-             className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto"
+          <button
+            onClick={handleFavorite}
+            className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto"
           >
-            <Bookmark className={`h-4 w-4 ${isFavorited ? 'text-[#D7DADC] fill-[#D7DADC]' : 'text-[#82959B]'}`} />
+            <Bookmark
+              className={`h-4 w-4 ${isFavorited ? "text-[#D7DADC] fill-[#D7DADC]" : "text-[#82959B]"}`}
+            />
           </button>
 
           <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2A3C42] transition hover:bg-[#34444E] pointer-events-auto">

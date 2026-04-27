@@ -302,6 +302,36 @@ export function setupMockApi() {
   mock.onPost("/interaction/followings").reply(200, { is_followed: true });
   mock.onDelete("/interaction/followings").reply(200, { is_followed: false });
 
+  // Mock deletes
+  mock.onDelete("/content").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const idx = MOckPosts.findIndex(p => p.id === data.content_id);
+    if (idx !== -1) MOckPosts.splice(idx, 1);
+    return [200, {}];
+  });
+
+  mock.onDelete("/interaction/comment").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const post = MOckPosts.find(p => p.id === data.content_id);
+    if (post && post.commentList) {
+       const removeComment = (comments: any[]) => {
+          for (let i = 0; i < comments.length; i++) {
+            if (comments[i].id === data.comment_id) {
+               comments.splice(i, 1);
+               return true;
+            }
+            if (comments[i].replies && removeComment(comments[i].replies)) {
+               return true;
+            }
+          }
+          return false;
+       };
+       removeComment(post.commentList);
+       post.comments = Math.max(0, parseInt(post.comments || "0") - 1).toString();
+    }
+    return [200, {}];
+  });
+
   // Mock profile
   mock.onGet(/\/user\/profile\/.+/).reply((config) => {
     const userId = config.url?.split("/").pop() || "unknown";

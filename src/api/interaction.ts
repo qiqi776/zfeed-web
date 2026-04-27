@@ -83,5 +83,9 @@ export const interactionApi = {
 
   unfavorite: async (params: InteractionParams) => {
     return api.delete("/interaction/favorite", { data: params });
+  },
+
+  deleteComment: async (params: { comment_id: string; content_id: string }): Promise<void> => {
+    return api.delete("/interaction/comment", { data: params });
   }
 };
