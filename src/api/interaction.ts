@@ -48,6 +48,12 @@ export interface PostCommentResponse {
   comment_id: string;
 }
 
+export interface InteractionParams {
+  content_id: string;
+  scene?: string; // e.g. ARTICLE
+  content_user_id?: string;
+}
+
 export const interactionApi = {
   getComments: async (params: CommentListParams): Promise<CommentListResponse> => {
     return api.post("/interaction/comment/list", params);
@@ -59,5 +65,21 @@ export const interactionApi = {
 
   postComment: async (params: PostCommentParams): Promise<PostCommentResponse> => {
     return api.post("/interaction/comment", params);
+  },
+
+  like: async (params: InteractionParams) => {
+    return api.post("/interaction/like", params);
+  },
+
+  unlike: async (params: InteractionParams) => {
+    return api.post("/interaction/unlike", params);
+  },
+
+  favorite: async (params: InteractionParams) => {
+    return api.post("/interaction/favorite", params);
+  },
+
+  unfavorite: async (params: InteractionParams) => {
+    return api.delete("/interaction/favorite", { data: params });
   }
 };

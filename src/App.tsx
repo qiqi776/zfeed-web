@@ -118,6 +118,8 @@ function Feed() {
                     upvotes: item.like_count.toString(),
                     comments: "0",
                     timeAgo: new Date(item.published_at * 1000).toLocaleDateString(),
+                    isLiked: item.is_liked,
+                    upvoteCount: item.like_count,
                  };
                  return (
                   <motion.div
@@ -170,6 +172,9 @@ function PostView() {
     upvotes: serverPost.like_count.toString(),
     comments: serverPost.comment_count?.toString() || "0",
     timeAgo: new Date(serverPost.published_at * 1000).toLocaleDateString(),
+    isLiked: serverPost.is_liked,
+    isFavorited: serverPost.is_favorited,
+    upvoteCount: serverPost.like_count,
   } : null);
 
   if (isLoading && !mockPost) return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" /></div>;

@@ -19,6 +19,9 @@ export interface Post {
   comments: string;
   timeAgo: string;
   commentList?: Comment[];
+  isLiked?: boolean;
+  isFavorited?: boolean;
+  upvoteCount?: number;
 }
 
 export const MOckPosts: Post[] = [

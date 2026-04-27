@@ -7,16 +7,74 @@ import {
   Bookmark,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { Post } from "../data/mockData";
 import { UserHoverCard } from "./UserHoverCard";
+import { useAuthStore } from "../store/useAuthStore";
+import { toast } from "sonner";
+import { interactionApi } from "../api/interaction";
 
 interface PostCardProps {
   post: Post;
 }
 
 export function PostCard({ post }: PostCardProps) {
+  const { user } = useAuthStore();
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [upvoteCount, setUpvoteCount] = useState(post.upvoteCount || parseInt(post.upvotes) || 0);
+  const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please login to like posts");
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        setIsLiked(false);
+        setUpvoteCount(prev => prev - 1);
+        await interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" });
+      } else {
+        setIsLiked(true);
+        setUpvoteCount(prev => prev + 1);
+        await interactionApi.like({ content_id: post.id, scene: "ARTICLE" });
+      }
+    } catch (err) {
+      setIsLiked(!isLiked);
+      setUpvoteCount(isLiked ? upvoteCount + 1 : upvoteCount - 1);
+      toast.error("Failed to update like status");
+    }
+  };
+
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please login to save posts");
+      return;
+    }
+
+    try {
+      if (isFavorited) {
+        setIsFavorited(false);
+        await interactionApi.unfavorite({ content_id: post.id, scene: "ARTICLE" });
+        toast.success("Post removed from favorites");
+      } else {
+        setIsFavorited(true);
+        await interactionApi.favorite({ content_id: post.id, scene: "ARTICLE" });
+        toast.success("Post saved to favorites");
+      }
+    } catch (err) {
+      setIsFavorited(!isFavorited);
+      toast.error("Failed to update favorite status");
+    }
+  };
+
   return (
-    <article className="flex cursor-pointer flex-col bg-[#1A282D] transition sm:rounded-xl sm:border sm:border-[#34444E] hover:border-[#82959B] relative">
+    <article className="flex cursor-pointer flex-col justify-between bg-[#1A282D] transition sm:rounded-xl sm:border sm:border-[#34444E] hover:border-[#82959B] relative h-full">
       <Link to={`/post/${post.id}`} className="absolute inset-0 z-0"></Link>
       <div className="p-3 sm:px-4 sm:pt-4 z-10 pointer-events-none">
         {/* Post Header */}
@@ -62,53 +120,66 @@ export function PostCard({ post }: PostCardProps) {
         </div>
       </div>
 
-      {/* Image Content */}
-      {post.imageUrl && (
-        <div className="mt-2 flex w-full justify-center bg-[#0B1416] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-none">
-          <img
-            src={post.imageUrl}
-            alt="Post image"
-            className="max-h-[500px] object-contain sm:rounded-md pointer-events-auto"
-          />
-        </div>
-      )}
+      <div>
+        {/* Image Content */}
+        {post.imageUrl && (
+          <div className="mt-2 flex w-full justify-center bg-[#0B1416] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-none">
+            <img
+              src={post.imageUrl}
+              alt="Post image"
+              className="max-h-[500px] object-contain sm:rounded-md pointer-events-auto"
+            />
+          </div>
+        )}
 
-      {/* Post Actions Footer */}
-      <div className="flex items-center gap-2 p-3 sm:px-4 sm:pb-4 sm:pt-2 z-10">
-        {/* Vote Counter Oval */}
-        <div className="flex items-center rounded-full bg-[#2A3C42]">
-          <button className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23]">
-            <ArrowBigUp className="h-5 w-5 text-[#82959B] hover:text-[#FF4500]" />
+        {/* Post Actions Footer */}
+        <div className="flex items-center gap-2 p-3 sm:px-4 sm:pb-4 sm:pt-2 z-10">
+          {/* Vote Counter Oval */}
+          <div className="flex items-center rounded-full bg-[#2A3C42] pointer-events-auto">
+            <button 
+               onClick={handleLike} 
+               className={`flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23] ${isLiked ? 'text-[#FF4500]' : 'text-[#82959B]'}`}
+            >
+               <ArrowBigUp className={`h-5 w-5 ${isLiked ? 'text-[#FF4500] fill-[#FF4500]' : 'hover:text-[#FF4500]'}`} />
+            </button>
+            <span className={`min-w-6 text-center text-sm font-bold ${isLiked ? 'text-[#FF4500]' : 'text-[#D7DADC]'}`}>
+              {upvoteCount > 1000 ? (upvoteCount/1000).toFixed(1) + 'k' : upvoteCount === 0 ? post.upvotes : upvoteCount}
+            </span>
+            <button className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23]">
+              <ArrowBigDown className="h-5 w-5 text-[#82959B] hover:text-blue-500" />
+            </button>
+          </div>
+
+          {/* Comments Oval */}
+          <Link to={`/post/${post.id}`} className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto">
+            <MessageSquare className="h-4 w-4 text-[#82959B]" />
+            <span className="text-sm font-bold text-[#D7DADC]">
+              {post.comments} Comments
+            </span>
+          </Link>
+
+          {/* Share Oval */}
+          <button className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto">
+            <Share className="h-4 w-4 text-[#82959B]" />
+            <span className="hidden text-sm font-bold text-[#D7DADC] sm:block">
+              Share
+            </span>
           </button>
-          <span className="min-w-6 text-center text-sm font-bold text-[#D7DADC]">
-            {post.upvotes}
-          </span>
-          <button className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23]">
-            <ArrowBigDown className="h-5 w-5 text-[#82959B] hover:text-blue-500" />
+
+          <div className="flex-1" />
+          
+          {/* Save/Favorite */}
+          <button 
+             onClick={handleFavorite}
+             className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto"
+          >
+            <Bookmark className={`h-4 w-4 ${isFavorited ? 'text-[#D7DADC] fill-[#D7DADC]' : 'text-[#82959B]'}`} />
+          </button>
+
+          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2A3C42] transition hover:bg-[#34444E] pointer-events-auto">
+            <MoreHorizontal className="h-5 w-5 text-[#82959B]" />
           </button>
         </div>
-
-        {/* Comments Oval */}
-        <Link to={`/post/${post.id}`} className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E]">
-          <MessageSquare className="h-4 w-4 text-[#82959B]" />
-          <span className="text-sm font-bold text-[#D7DADC]">
-            {post.comments} Comments
-          </span>
-        </Link>
-
-        {/* Share Oval */}
-        <button className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E]">
-          <Share className="h-4 w-4 text-[#82959B]" />
-          <span className="hidden text-sm font-bold text-[#D7DADC] sm:block">
-            Share
-          </span>
-        </button>
-
-        <div className="flex-1" />
-
-        <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2A3C42] transition hover:bg-[#34444E]">
-          <MoreHorizontal className="h-5 w-5 text-[#82959B]" />
-        </button>
       </div>
     </article>
   );

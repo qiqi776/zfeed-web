@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowBigDown, ArrowBigUp, MessageSquare, MoreHorizontal, Share, CornerDownRight, Loader2 } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp, MessageSquare, MoreHorizontal, Share, CornerDownRight, Loader2, Bookmark } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Comment, Post } from "../data/mockData";
 import { UserHoverCard } from "./UserHoverCard";
@@ -12,6 +12,57 @@ export function PostDetail({ post }: { post: Post }) {
   const [commentText, setCommentText] = useState("");
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [upvoteCount, setUpvoteCount] = useState(post.upvoteCount || parseInt(post.upvotes) || 0);
+  const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please login to like posts");
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        setIsLiked(false);
+        setUpvoteCount(prev => prev - 1);
+        await interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" });
+      } else {
+        setIsLiked(true);
+        setUpvoteCount(prev => prev + 1);
+        await interactionApi.like({ content_id: post.id, scene: "ARTICLE" });
+      }
+    } catch (err) {
+      setIsLiked(!isLiked);
+      setUpvoteCount(isLiked ? upvoteCount + 1 : upvoteCount - 1);
+      toast.error("Failed to update like status");
+    }
+  };
+
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please login to save posts");
+      return;
+    }
+
+    try {
+      if (isFavorited) {
+        setIsFavorited(false);
+        await interactionApi.unfavorite({ content_id: post.id, scene: "ARTICLE" });
+        toast.success("Post removed from favorites");
+      } else {
+        setIsFavorited(true);
+        await interactionApi.favorite({ content_id: post.id, scene: "ARTICLE" });
+        toast.success("Post saved to favorites");
+      }
+    } catch (err) {
+      setIsFavorited(!isFavorited);
+      toast.error("Failed to update favorite status");
+    }
+  };
 
   const { data: commentsData, isLoading: commentsLoading } = useQuery({
     queryKey: ['comments', post.id],
@@ -98,31 +149,43 @@ export function PostDetail({ post }: { post: Post }) {
           </div>
         )}
 
-        <div className="flex items-center gap-2 border-b border-[#34444E] p-3 sm:px-4 sm:py-3">
-          <div className="flex items-center rounded-full bg-[#2A3C42]">
-            <button className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23]">
-              <ArrowBigUp className="h-5 w-5 text-[#82959B] hover:text-[#FF4500]" />
+        <div className="flex items-center gap-2 border-b border-[#34444E] p-3 sm:px-4 sm:py-3 cursor-pointer pointer-events-none">
+          <div className="flex items-center rounded-full bg-[#2A3C42] pointer-events-auto">
+            <button 
+               onClick={handleLike} 
+               className={`flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23] ${isLiked ? 'text-[#FF4500]' : 'text-[#82959B]'}`}
+            >
+               <ArrowBigUp className={`h-5 w-5 ${isLiked ? 'text-[#FF4500] fill-[#FF4500]' : 'hover:text-[#FF4500]'}`} />
             </button>
-            <span className="min-w-6 text-center text-sm font-bold text-[#D7DADC]">
-              {post.upvotes}
+            <span className={`min-w-6 text-center text-sm font-bold ${isLiked ? 'text-[#FF4500]' : 'text-[#D7DADC]'}`}>
+              {upvoteCount > 1000 ? (upvoteCount/1000).toFixed(1) + 'k' : upvoteCount === 0 ? post.upvotes : upvoteCount}
             </span>
             <button className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23]">
               <ArrowBigDown className="h-5 w-5 text-[#82959B] hover:text-blue-500" />
             </button>
           </div>
 
-          <button className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E]">
+          <button className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto">
             <MessageSquare className="h-4 w-4 text-[#82959B]" />
             <span className="text-sm font-bold text-[#D7DADC]">
               {post.comments}
             </span>
           </button>
 
-          <button className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E]">
+          <button className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto">
             <Share className="h-4 w-4 text-[#82959B]" />
             <span className="hidden text-sm font-bold text-[#D7DADC] sm:block">
               Share
             </span>
+          </button>
+
+          <div className="flex-1" />
+          
+          <button 
+             onClick={handleFavorite}
+             className="flex h-9 items-center gap-2 rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto"
+          >
+            <Bookmark className={`h-4 w-4 ${isFavorited ? 'text-[#D7DADC] fill-[#D7DADC]' : 'text-[#82959B]'}`} />
           </button>
         </div>
       </article>
