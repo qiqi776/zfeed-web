@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, type FC, type MouseEvent, type SyntheticEvent } from "react";
 import {
   ArrowBigDown,
   ArrowBigUp,
@@ -32,7 +32,7 @@ export function PostDetail({ post }: { post: Post }) {
   );
   const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
 
-  const handleLike = async (e: React.MouseEvent) => {
+  const handleLike = async (e: MouseEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to like posts");
@@ -61,7 +61,7 @@ export function PostDetail({ post }: { post: Post }) {
     }
   };
 
-  const handleDownvote = (e: React.MouseEvent) => {
+  const handleDownvote = (e: MouseEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to downvote");
@@ -85,7 +85,7 @@ export function PostDetail({ post }: { post: Post }) {
     }
   };
 
-  const handleFavorite = async (e: React.MouseEvent) => {
+  const handleFavorite = async (e: MouseEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to save posts");
@@ -134,7 +134,9 @@ export function PostDetail({ post }: { post: Post }) {
     },
   });
 
-  const handlePostComment = (e: React.FormEvent) => {
+  const handlePostComment = (
+    e: SyntheticEvent<HTMLFormElement, SubmitEvent>,
+  ) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to comment");
@@ -158,7 +160,7 @@ export function PostDetail({ post }: { post: Post }) {
     },
   });
 
-  const handleDeletePost = (e: React.MouseEvent) => {
+  const handleDeletePost = (e: MouseEvent) => {
     e.preventDefault();
     if (confirm("Are you sure you want to delete this post?")) {
       deletePostMutation.mutate();
@@ -373,7 +375,7 @@ export function PostDetail({ post }: { post: Post }) {
   );
 }
 
-const RealCommentThread: React.FC<{
+const RealCommentThread: FC<{
   comment: CommentItem;
   post_id: string;
   parent_id?: string;
@@ -449,7 +451,7 @@ const RealCommentThread: React.FC<{
     },
   });
 
-  const handleReply = (e: React.FormEvent) => {
+  const handleReply = (e: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to reply");
@@ -609,7 +611,7 @@ const RealCommentThread: React.FC<{
   );
 };
 
-const CommentThread: React.FC<{ comment: Comment }> = ({ comment }) => {
+const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
   return (
     <div className="flex gap-2">
       {/* Left threading line */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type SyntheticEvent } from "react";
 import { ArrowLeft, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
@@ -36,7 +36,7 @@ export function CreatePost() {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error("Title is required");

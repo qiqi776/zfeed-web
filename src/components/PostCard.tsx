@@ -8,7 +8,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { Post } from "../data/mockData";
 import { UserHoverCard } from "./UserHoverCard";
 import { useAuthStore } from "../store/useAuthStore";
@@ -31,7 +31,7 @@ export function PostCard({ post }: PostCardProps) {
   );
   const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
 
-  const handleLike = async (e: React.MouseEvent) => {
+  const handleLike = async (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
@@ -61,7 +61,7 @@ export function PostCard({ post }: PostCardProps) {
     }
   };
 
-  const handleDownvote = (e: React.MouseEvent) => {
+  const handleDownvote = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
@@ -86,7 +86,7 @@ export function PostCard({ post }: PostCardProps) {
     }
   };
 
-  const handleFavorite = async (e: React.MouseEvent) => {
+  const handleFavorite = async (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
@@ -129,7 +129,7 @@ export function PostCard({ post }: PostCardProps) {
     },
   });
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this post?")) {
