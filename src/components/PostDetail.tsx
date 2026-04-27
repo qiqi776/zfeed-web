@@ -1,10 +1,48 @@
-import React from "react";
-import { ArrowBigDown, ArrowBigUp, MessageSquare, MoreHorizontal, Share, CornerDownRight } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowBigDown, ArrowBigUp, MessageSquare, MoreHorizontal, Share, CornerDownRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Comment, Post } from "../data/mockData";
 import { UserHoverCard } from "./UserHoverCard";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { interactionApi, CommentItem } from "../api/interaction";
+import { useAuthStore } from "../store/useAuthStore";
+import { toast } from "sonner";
 
 export function PostDetail({ post }: { post: Post }) {
+  const [commentText, setCommentText] = useState("");
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  const { data: commentsData, isLoading: commentsLoading } = useQuery({
+    queryKey: ['comments', post.id],
+    queryFn: () => interactionApi.getComments({ content_id: post.id, page_size: 50 }),
+    enabled: !!post.id,
+  });
+
+  const postCommentMutation = useMutation({
+    mutationFn: (text: string) => interactionApi.postComment({ content_id: post.id, comment: text }),
+    onSuccess: () => {
+      setCommentText("");
+      queryClient.invalidateQueries({ queryKey: ['comments', post.id] });
+      toast.success("Comment posted!");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to post comment");
+    }
+  });
+
+  const handlePostComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please login to comment");
+      return;
+    }
+    if (!commentText.trim()) return;
+    postCommentMutation.mutate(commentText);
+  };
+
+  const displayComments = commentsData?.comments || [];
+
   return (
     <div className="flex w-full flex-col bg-[#0B1416] pb-20">
       
@@ -90,26 +128,180 @@ export function PostDetail({ post }: { post: Post }) {
       </article>
 
       {/* Comment Input */}
-      <div className="mb-6 flex items-center gap-3 rounded-xl border border-[#34444E] bg-[#1A282D] p-3 shadow-sm">
+      <form onSubmit={handlePostComment} className="mb-6 flex items-center gap-3 rounded-xl border border-[#34444E] bg-[#1A282D] p-3 shadow-sm">
         <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42]">
-           <img src="https://styles.redditmedia.com/t5_snmnv/styles/profileIcon_snoo531ce38f-a9cb-4d39-9ea2-2ea9c6a1bd79-headshot.png?width=256&height=256&crop=256:256,smart&s=47ea200c9f131a4fdbcbbeb2da1d0a51be3b508f" alt="avatar" className="h-full w-full object-cover"/>
+           {user ? (
+              <img src={user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}&backgroundColor=b6e3f4`} alt="avatar" className="h-full w-full object-cover"/>
+           ) : (
+              <img src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&backgroundColor=b6e3f4" alt="avatar" className="h-full w-full object-cover"/>
+           )}
         </div>
         <input
           type="text"
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
           placeholder="Add a comment"
-          className="h-10 w-full rounded-full border border-[#34444E] bg-[#2A3C42] px-4 text-sm text-[#D7DADC] transition focus:border-[#D7DADC] focus:outline-none focus:ring-1 focus:ring-[#D7DADC] placeholder:text-[#82959B]"
+          disabled={postCommentMutation.isPending}
+          className="h-10 w-full rounded-full border border-[#34444E] bg-[#2A3C42] px-4 text-sm text-[#D7DADC] transition focus:border-[#D7DADC] focus:outline-none focus:ring-1 focus:ring-[#D7DADC] placeholder:text-[#82959B] disabled:opacity-50"
         />
-      </div>
+        <button 
+          type="submit" 
+          disabled={!commentText.trim() || postCommentMutation.isPending}
+          className="rounded-full bg-[#D7DADC] px-4 py-2 font-bold text-[#1A282D] transition hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block"
+        >
+          {postCommentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Comment"}
+        </button>
+      </form>
 
       {/* Comments List */}
       <div className="flex flex-col gap-4">
-        {post.commentList && post.commentList.length > 0 ? (
+        {commentsLoading ? (
+            <div className="flex w-full items-center justify-center flex-col p-8 text-[#82959B] gap-4">
+               <Loader2 className="h-8 w-8 animate-spin" />
+               <p className="text-sm font-bold">Loading comments...</p>
+            </div>
+        ) : displayComments.length > 0 ? (
+          displayComments.map(comment => <RealCommentThread key={comment.comment_id} comment={comment} post_id={post.id} />)
+        ) : post.commentList && post.commentList.length > 0 ? (
+          // fallback to mock comments if api returns empty but we have mock ones
           post.commentList.map(comment => <CommentThread key={comment.id} comment={comment} />)
         ) : (
           <div className="flex flex-col items-center justify-center p-8 text-[#82959B]">
             <MessageSquare className="h-12 w-12 opacity-20 mb-3" />
             <p className="text-sm font-bold">No comments yet</p>
             <p className="text-xs opacity-70">Be the first to share what you think!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const RealCommentThread: React.FC<{ comment: CommentItem; post_id: string; parent_id?: string }> = ({ comment, post_id, parent_id }) => {
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  const { data: repliesData } = useQuery({
+     queryKey: ['replies', comment.comment_id],
+     queryFn: () => interactionApi.getReplyComments({ comment_id: comment.comment_id, page_size: 50 }),
+     enabled: comment.reply_count > 0,
+  });
+
+  const replyCommentMutation = useMutation({
+    mutationFn: (text: string) => interactionApi.postComment({ 
+       content_id: post_id, 
+       comment: text, 
+       parent_id: comment.comment_id,
+       root_id: parent_id || comment.comment_id,
+       reply_to_user_id: comment.user_id
+    }),
+    onSuccess: () => {
+      setReplyText("");
+      setIsReplying(false);
+      queryClient.invalidateQueries({ queryKey: ['replies', comment.comment_id] });
+      queryClient.invalidateQueries({ queryKey: ['comments', post_id] });
+      toast.success("Reply posted!");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to post reply");
+    }
+  });
+
+  const handleReply = (e: React.FormEvent) => {
+     e.preventDefault();
+     if (!user) {
+        toast.error("Please login to reply");
+        return;
+     }
+     if (!replyText.trim()) return;
+     replyCommentMutation.mutate(replyText);
+  }
+
+  return (
+    <div className="flex gap-2">
+      <div className="flex flex-col items-center">
+        <div className="mb-2 h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E] relative group z-20 pointer-events-auto">
+            <Link to={`/user/${comment.user_name || 'unknown'}`}>
+              <img src={comment.user_avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${comment.user_name}&backgroundColor=b6e3f4`} className="h-full w-full object-cover" />
+            </Link>
+            <UserHoverCard username={comment.user_name || 'unknown'} />
+        </div>
+        <div className="flex-1 w-px bg-[#34444E] my-1 rounded-full group-hover:bg-[#82959B] transition"></div>
+      </div>
+      
+      <div className="flex flex-1 flex-col pb-2">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="relative group w-max block z-20 pointer-events-auto">
+             <Link to={`/user/${comment.user_name || 'unknown'}`} className="text-xs font-bold text-[#D7DADC] hover:underline">
+               {comment.user_name || 'Unknown User'}
+             </Link>
+             <UserHoverCard username={comment.user_name || 'unknown'} />
+          </div>
+          <span className="text-[10px] text-[#82959B]">— {new Date(comment.created_at * 1000).toLocaleDateString()}</span>
+        </div>
+        <p className="text-sm text-[#D7DADC] opacity-80 mb-2 leading-relaxed">
+          {comment.reply_to_user_id && comment.parent_id !== comment.root_id && (
+             <span className="text-blue-400 mr-2">@user_{comment.reply_to_user_id.substring(0, 4)}</span>
+          )}
+          {comment.comment}
+        </p>
+        
+        <div className="flex items-center gap-1 mb-3">
+          <div className="flex items-center">
+            <button className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-[#2A3C42]">
+              <ArrowBigUp className="h-4 w-4 text-[#82959B] hover:text-[#FF4500]" />
+            </button>
+            <span className="min-w-4 text-center text-xs font-bold text-[#82959B]">
+              0
+            </span>
+            <button className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-[#2A3C42]">
+              <ArrowBigDown className="h-4 w-4 text-[#82959B] hover:text-blue-500" />
+            </button>
+          </div>
+          <button 
+             onClick={() => setIsReplying(!isReplying)}
+             className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-[#2A3C42]"
+          >
+            <MessageSquare className="h-3 w-3 text-[#82959B]" />
+            <span className="text-xs font-bold text-[#82959B]">Reply</span>
+          </button>
+          <button className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-[#2A3C42]">
+            <Share className="h-3 w-3 text-[#82959B]" />
+            <span className="text-xs font-bold text-[#82959B]">Share</span>
+          </button>
+          <button className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-[#2A3C42]">
+             <MoreHorizontal className="h-4 w-4 text-[#82959B]" />
+          </button>
+        </div>
+
+        {isReplying && (
+           <form onSubmit={handleReply} className="mb-4 flex items-start gap-2">
+              <input 
+                 type="text"
+                 value={replyText}
+                 onChange={(e) => setReplyText(e.target.value)}
+                 autoFocus
+                 placeholder={`Reply to ${comment.user_name || 'user'}`}
+                 className="flex-1 rounded-lg border border-[#34444E] bg-[#2A3C42] px-3 py-1.5 text-sm text-[#D7DADC] transition focus:border-[#D7DADC] focus:outline-none focus:ring-1 focus:ring-[#D7DADC] disabled:opacity-50"
+                 disabled={replyCommentMutation.isPending}
+              />
+              <button 
+                 type="submit" 
+                 disabled={!replyText.trim() || replyCommentMutation.isPending}
+                 className="rounded-lg bg-[#D7DADC] px-3 py-1.5 text-sm font-bold text-[#1A282D] transition hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                 {replyCommentMutation.isPending ? "..." : "Reply"}
+              </button>
+           </form>
+        )}
+
+        {repliesData?.comments && repliesData.comments.length > 0 && (
+          <div className="flex flex-col mt-1">
+            {repliesData.comments.map(reply => (
+              <RealCommentThread key={reply.comment_id} comment={reply} post_id={post_id} parent_id={parent_id || comment.comment_id} />
+            ))}
           </div>
         )}
       </div>
@@ -124,7 +316,7 @@ const CommentThread: React.FC<{ comment: Comment }> = ({ comment }) => {
       <div className="flex flex-col items-center">
         <div className="mb-2 h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E] relative group z-20 pointer-events-auto">
             <Link to={`/user/${comment.author}`}>
-              <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${comment.author}&backgroundColor=b6e3f4,c0aede,d1d4f9`} className="h-full w-full object-cover" />
+              <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${comment.author}&backgroundColor=b6e3f4,c0aede,d1d4f9`} className="h-full w-full object-cover" alt="avatar" />
             </Link>
             <UserHoverCard username={comment.author} />
         </div>
@@ -182,3 +374,4 @@ const CommentThread: React.FC<{ comment: Comment }> = ({ comment }) => {
     </div>
   );
 }
+

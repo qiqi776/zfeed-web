@@ -7,8 +7,9 @@ import { Routes, Route, Link, useParams, useNavigate, useLocation } from "react-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { feedApi } from "./api/feed";
+import { contentApi } from "./api/content";
 import { Navbar } from "./components/Navbar";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
@@ -150,7 +151,28 @@ function Feed() {
 function PostView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const post = MOckPosts.find((p) => p.id === id);
+  
+  const mockPost = MOckPosts.find((p) => p.id === id);
+
+  const { data: serverPost, isLoading, error } = useQuery({
+    queryKey: ['content', id],
+    queryFn: () => contentApi.getDetail(id!),
+    enabled: !mockPost && !!id,
+  });
+
+  const post: Post | null = mockPost || (serverPost ? {
+    id: serverPost.content_id,
+    subreddit: "feed",
+    author: serverPost.author_name,
+    title: serverPost.title,
+    content: serverPost.article_content || serverPost.description,
+    imageUrl: serverPost.cover_url,
+    upvotes: serverPost.like_count.toString(),
+    comments: serverPost.comment_count?.toString() || "0",
+    timeAgo: new Date(serverPost.published_at * 1000).toLocaleDateString(),
+  } : null);
+
+  if (isLoading && !mockPost) return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" /></div>;
 
   if (!post) return <div className="text-[#D7DADC] p-8 text-center bg-[#1A282D] rounded-xl border border-[#34444E] mb-20">Post not found</div>;
 
