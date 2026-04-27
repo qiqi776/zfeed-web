@@ -4,39 +4,48 @@
  */
 
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from "react-router-dom";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { feedApi } from "./api/feed";
 import { Navbar } from "./components/Navbar";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
 import { PostCard } from "./components/PostCard";
 import { PostDetail } from "./components/PostDetail";
 import { Profile } from "./components/Profile";
-import { MOckPosts, generateMorePosts } from "./data/mockData";
+import { MOckPosts, generateMorePosts, Post } from "./data/mockData";
 
 // Extracted Feed Component
 function Feed() {
-  const [posts, setPosts] = useState(MOckPosts);
-  const [loading, setLoading] = useState(false);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status
+  } = useInfiniteQuery({
+    queryKey: ['recommendFeed'],
+    queryFn: ({ pageParam }) => feedApi.getRecommendFeed({ cursor: pageParam, page_size: 10 }),
+    initialPageParam: '',
+    getNextPageParam: (lastPage) => lastPage.has_more ? lastPage.next_cursor : undefined,
+  });
+
   const observer = useRef<IntersectionObserver | null>(null);
 
   const lastPostRef = useCallback(
     (node: HTMLDivElement) => {
-      if (loading) return;
+      if (status === 'pending' || isFetchingNextPage) return;
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          setLoading(true);
-          setTimeout(() => {
-            setPosts((prev) => [...prev, ...generateMorePosts(prev.length, 5)]);
-            setLoading(false);
-          }, 1000);
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
         }
       });
       if (node) observer.current.observe(node);
     },
-    [loading]
+    [status, isFetchingNextPage, hasNextPage, fetchNextPage]
   );
 
   return (
@@ -74,12 +83,15 @@ function Feed() {
 
       {/* Posts Feed */}
       <div className="flex flex-col sm:gap-4 pb-10">
-        <AnimatePresence>
-          {posts.map((post, index) => {
-             const isLastElement = index === posts.length - 1;
-             return (
+        {status === 'pending' ? (
+          <div className="flex w-full items-center justify-center py-6 pb-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" />
+          </div>
+        ) : (
+          <AnimatePresence>
+            {/* Display static mock posts first */}
+            {MOckPosts.map((post) => (
               <motion.div
-                ref={isLastElement ? lastPostRef : null}
                 layout
                 key={post.id}
                 initial={{ opacity: 0 }}
@@ -89,11 +101,42 @@ function Feed() {
               >
                 <PostCard post={post} />
               </motion.div>
-             )
-          })}
-        </AnimatePresence>
+            ))}
+
+            {/* Display fetched posts if any */}
+            {status === 'success' && data.pages.map((page, pageIndex) => 
+               page.items?.map((item, itemIndex) => {
+                 const isLastElement = pageIndex === data.pages.length - 1 && itemIndex === page.items.length - 1;
+                 // adapt item to Post
+                 const post: Post = {
+                    id: item.content_id, // ensure unique
+                    subreddit: "feed",
+                    author: item.author_name,
+                    title: item.title,
+                    imageUrl: item.cover_url,
+                    upvotes: item.like_count.toString(),
+                    comments: "0",
+                    timeAgo: new Date(item.published_at * 1000).toLocaleDateString(),
+                 };
+                 return (
+                  <motion.div
+                    ref={isLastElement ? lastPostRef : null}
+                    layout
+                    key={`${pageIndex}-${item.content_id}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <PostCard post={post} />
+                  </motion.div>
+                 )
+               })
+            )}
+          </AnimatePresence>
+        )}
         
-        {loading && (
+        {isFetchingNextPage && (
           <div className="flex w-full items-center justify-center py-6 pb-20">
             <Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" />
           </div>
