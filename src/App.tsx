@@ -149,11 +149,13 @@ export default function App() {
         <div className="flex flex-1 justify-center xl:gap-8 px-4 sm:px-6">
           <main className="flex w-full max-w-[750px] flex-col py-4 sm:py-6 lg:mr-6 transition-all">
             <AnimatePresence mode="wait">
-              <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<Feed />} />
-                <Route path="/post/:id" element={<PostView />} />
-                <Route path="/user/:username" element={<Profile />} />
-              </Routes>
+              <motion.div key={location.pathname} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <Routes location={location}>
+                  <Route path="/" element={<Feed />} />
+                  <Route path="/post/:id" element={<PostView />} />
+                  <Route path="/user/:username" element={<Profile />} />
+                </Routes>
+              </motion.div>
             </AnimatePresence>
           </main>
 

@@ -16,3 +16,4 @@ pnpm-debug.log*
 .codex
 .vscode/
 .idea/
+api-docs.md

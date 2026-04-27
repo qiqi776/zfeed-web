@@ -1,3 +1,4 @@
+import React from "react";
 import { ArrowBigDown, ArrowBigUp, MessageSquare, MoreHorizontal, Share, CornerDownRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Comment, Post } from "../data/mockData";
@@ -116,7 +117,7 @@ export function PostDetail({ post }: { post: Post }) {
   );
 }
 
-function CommentThread({ comment }: { comment: Comment }) {
+const CommentThread: React.FC<{ comment: Comment }> = ({ comment }) => {
   return (
     <div className="flex gap-2">
       {/* Left threading line */}
