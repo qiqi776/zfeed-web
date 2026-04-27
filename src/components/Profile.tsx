@@ -1,18 +1,126 @@
-import { ArrowLeft, Cake, Grid, MessageSquare, Star } from "lucide-react";
+import { ArrowLeft, Cake, Grid, Star, Loader2 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { PostCard } from "./PostCard";
-import { MOckPosts, generateMorePosts } from "../data/mockData";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { userApi } from "../api/user";
+import { feedApi } from "../api/feed";
+import { Post, MOckPosts } from "../data/mockData";
+import { useAuthStore } from "../store/useAuthStore";
+import { toast } from "sonner";
 
 export function Profile() {
-  const { username } = useParams();
+  const { username: userId } = useParams(); // URL param is actually userId
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user: currentUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("POSTS");
-  const [posts] = useState(() => [
-    ...MOckPosts.slice(0, 2),
-    ...generateMorePosts(0, 3).map(p => ({ ...p, author: username || "user" }))
-  ]);
+
+  const { data: profileResponse, isLoading: profileLoading, error: profileError } = useQuery({
+    queryKey: ['userProfile', userId],
+    queryFn: () => userApi.getProfile(userId!),
+    enabled: !!userId,
+  });
+
+  const {
+    data: feedData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status
+  } = useInfiniteQuery({
+    queryKey: ['userFeed', userId, activeTab],
+    queryFn: ({ pageParam }) => {
+      if (activeTab === "POSTS") {
+        return feedApi.getUserPublishFeed({ user_id: userId!, cursor: pageParam, page_size: 10 });
+      } else if (activeTab === "SAVED") {
+        return feedApi.getUserFavoriteFeed({ user_id: userId!, cursor: pageParam, page_size: 10 });
+      }
+      return Promise.resolve({ items: [], next_cursor: '', has_more: false });
+    },
+    initialPageParam: '',
+    getNextPageParam: (lastPage) => lastPage?.has_more ? lastPage.next_cursor : undefined,
+    enabled: !!userId && (activeTab === "POSTS" || activeTab === "SAVED"),
+  });
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastPostRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (status === 'pending' || isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [status, isFetchingNextPage, hasNextPage, fetchNextPage]
+  );
+
+  const followMutation = useMutation({
+    mutationFn: (targetId: string) => userApi.followUser(targetId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
+      toast.success("Followed user!");
+    },
+    onError: () => toast.error("Failed to follow user"),
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: (targetId: string) => userApi.unfollowUser(targetId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
+      toast.success("Unfollowed user!");
+    },
+    onError: () => toast.error("Failed to unfollow user"),
+  });
+
+  const handleFollowToggle = () => {
+    if (!currentUser) {
+      toast.error("Please log in to follow");
+      return;
+    }
+    if (!profileResponse) return;
+    
+    if (profileResponse.viewer.is_following) {
+      unfollowMutation.mutate(userId!);
+    } else {
+      followMutation.mutate(userId!);
+    }
+  };
+
+  if (profileLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+        className="flex justify-center py-20"
+      >
+        <Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" />
+      </motion.div>
+    );
+  }
+
+  if (!profileResponse) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+        className="text-center py-20 text-[#82959B]"
+      >
+        User not found
+      </motion.div>
+    );
+  }
+
+  const { user_profile: profile, counts, viewer } = profileResponse;
+  const isSelf = currentUser?.user_id === profile.user_id;
 
   return (
     <motion.div
@@ -39,32 +147,45 @@ export function Profile() {
         <div className="px-4 pb-4 sm:px-6 relative">
           {/* Avatar */}
           <div className="absolute -top-10 sm:-top-12 h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-full border-4 border-[#1A282D] bg-[#2A3C42]">
-             <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${username}&backgroundColor=b6e3f4,c0aede,d1d4f9`} alt="User Avatar" className="h-full w-full object-cover" />
+             <img src={profile.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${profile.nickname}&backgroundColor=b6e3f4,c0aede,d1d4f9`} alt="User Avatar" className="h-full w-full object-cover" />
           </div>
 
           {/* Action Button */}
-          <div className="flex justify-end pt-3 sm:pt-4">
-             <button className="rounded-full bg-[#D7DADC] px-4 py-1.5 text-sm font-bold text-[#0B1416] transition hover:bg-white active:scale-95">
-               Follow
-             </button>
-          </div>
+          {!isSelf && (
+            <div className="flex justify-end pt-3 sm:pt-4">
+              <button 
+                onClick={handleFollowToggle}
+                disabled={followMutation.isPending || unfollowMutation.isPending}
+                className={`rounded-full px-4 py-1.5 text-sm font-bold transition active:scale-95 disabled:opacity-50 ${viewer.is_following ? 'border border-[#D7DADC] text-[#D7DADC] hover:bg-[#34444E]' : 'bg-[#D7DADC] text-[#0B1416] hover:bg-white'}`}
+              >
+                {viewer.is_following ? "Following" : "Follow"}
+              </button>
+            </div>
+          )}
+          {isSelf && (
+            <div className="flex justify-end pt-3 sm:pt-4 h-[36px]"></div>
+          )}
 
           {/* User Info */}
           <div className="mt-2 sm:mt-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#D7DADC]">u/{username}</h1>
-            <p className="text-sm text-[#82959B]">Software Engineer | Tech Enthusiast</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#D7DADC]">{profile.nickname}</h1>
+            <p className="text-sm text-[#82959B]">u/{profile.user_id.substring(0, 8)}</p>
+            {profile.bio && <p className="text-sm text-[#D7DADC] opacity-80 mt-2">{profile.bio}</p>}
           </div>
 
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-[#82959B]">
-             <div className="flex items-center gap-1.5">
-                <Star className="h-4 w-4 text-orange-500" />
-                <span className="font-bold text-[#D7DADC]">12.5k</span>
-                <span>Karma</span>
+             <div className="flex items-center gap-1.5 hover:text-[#D7DADC] transition cursor-pointer">
+                <span className="font-bold text-[#D7DADC]">{counts.follower_count}</span>
+                <span>Followers</span>
+             </div>
+             <div className="flex items-center gap-1.5 hover:text-[#D7DADC] transition cursor-pointer">
+                <span className="font-bold text-[#D7DADC]">{counts.followee_count}</span>
+                <span>Following</span>
              </div>
              <div className="flex items-center gap-1.5">
-                <Cake className="h-4 w-4" />
-                <span className="font-bold text-[#D7DADC]">Dec 12, 2021</span>
-                <span>Cake day</span>
+                <Star className="h-4 w-4 text-orange-500" />
+                <span className="font-bold text-[#D7DADC]">{counts.like_received_count}</span>
+                <span>Likes</span>
              </div>
           </div>
         </div>
@@ -89,19 +210,53 @@ export function Profile() {
 
       {/* Content Area */}
       <div className="flex flex-col gap-4">
-        {activeTab === "POSTS" ? (
+        {status === 'pending' ? (
+           <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" /></div>
+        ) : feedData?.pages[0]?.items?.length ? (
           <AnimatePresence>
-             {posts.map((post) => (
-               <motion.div key={post.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                 <PostCard post={post} />
-               </motion.div>
-             ))}
+            {feedData.pages.map((page, pageIndex) => 
+               page.items?.map((item, itemIndex) => {
+                 const isLastElement = pageIndex === feedData.pages.length - 1 && itemIndex === page.items.length - 1;
+                 const post: Post = {
+                    id: item.content_id, 
+                    subreddit: "user",
+                    author: item.author_name,
+                    authorId: item.author_id,
+                    title: item.title,
+                    imageUrl: item.cover_url,
+                    upvotes: item.like_count.toString(),
+                    comments: "0",
+                    timeAgo: new Date(item.published_at * 1000).toLocaleDateString(),
+                    isLiked: item.is_liked,
+                    upvoteCount: item.like_count,
+                 };
+                 return (
+                  <motion.div
+                    ref={isLastElement ? lastPostRef : null}
+                    layout
+                    key={`${pageIndex}-${item.content_id}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <PostCard post={post} />
+                  </motion.div>
+                 )
+               })
+            )}
           </AnimatePresence>
         ) : (
           <div className="flex flex-col items-center justify-center p-12 text-[#82959B] bg-[#1A282D] rounded-xl border border-[#34444E]">
             <Grid className="h-12 w-12 opacity-20 mb-3" />
             <p className="text-sm font-bold">Nothing to see here yet</p>
-            <p className="text-xs opacity-70">u/{username} hasn't added anything to {activeTab.toLowerCase()}.</p>
+            <p className="text-xs opacity-70">u/{profile.nickname} hasn't added anything to {activeTab.toLowerCase()}.</p>
+          </div>
+        )}
+        
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-6 pb-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" />
           </div>
         )}
       </div>

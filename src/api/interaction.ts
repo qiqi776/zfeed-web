@@ -13,6 +13,8 @@ export interface CommentItem {
   user_name: string;
   user_avatar: string;
   reply_count: number;
+  like_count?: number;
+  is_liked?: boolean;
 }
 
 export interface CommentListParams {

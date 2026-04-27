@@ -21,6 +21,7 @@ interface PostCardProps {
 export function PostCard({ post }: PostCardProps) {
   const { user } = useAuthStore();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [isDownvoted, setIsDownvoted] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(post.upvoteCount || parseInt(post.upvotes) || 0);
   const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
 
@@ -39,13 +40,41 @@ export function PostCard({ post }: PostCardProps) {
         await interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" });
       } else {
         setIsLiked(true);
-        setUpvoteCount(prev => prev + 1);
+        if (isDownvoted) {
+            setIsDownvoted(false);
+            setUpvoteCount(prev => prev + 2);
+        } else {
+            setUpvoteCount(prev => prev + 1);
+        }
         await interactionApi.like({ content_id: post.id, scene: "ARTICLE" });
       }
     } catch (err) {
       setIsLiked(!isLiked);
       setUpvoteCount(isLiked ? upvoteCount + 1 : upvoteCount - 1);
       toast.error("Failed to update like status");
+    }
+  };
+
+  const handleDownvote = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please login to downvote");
+      return;
+    }
+
+    if (isDownvoted) {
+      setIsDownvoted(false);
+      setUpvoteCount(prev => prev + 1);
+    } else {
+      setIsDownvoted(true);
+      if (isLiked) {
+        setIsLiked(false);
+        setUpvoteCount(prev => prev - 2);
+        interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" }).catch(() => {});
+      } else {
+        setUpvoteCount(prev => prev - 1);
+      }
     }
   };
 
@@ -80,7 +109,7 @@ export function PostCard({ post }: PostCardProps) {
         {/* Post Header */}
         <div className="flex items-center gap-2 text-xs text-[#82959B] pointer-events-auto">
           <div className="relative group z-20 pointer-events-auto block">
-            <Link to={`/user/${post.author}`} className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20 hover:ring-2 hover:ring-[#82959B] cursor-pointer">
+            <Link to={`/user/${post.authorId || post.author}`} className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20 hover:ring-2 hover:ring-[#82959B] cursor-pointer">
               {post.subredditIcon ? (
                 <img
                   src={post.subredditIcon}
@@ -100,7 +129,7 @@ export function PostCard({ post }: PostCardProps) {
             <span className="opacity-50">•</span>
             <span className="opacity-50">Posted by </span>
             <div className="relative group z-20 pointer-events-auto block">
-              <Link to={`/user/${post.author}`} onClick={(e) => e.stopPropagation()} className="opacity-50 hover:opacity-100 hover:text-[#D7DADC] hover:underline transition">u/{post.author}</Link>
+              <Link to={`/user/${post.authorId || post.author}`} onClick={(e) => e.stopPropagation()} className="opacity-50 hover:opacity-100 hover:text-[#D7DADC] hover:underline transition">u/{post.author}</Link>
                <UserHoverCard username={post.author} />
             </div>
             <span className="opacity-50"> {post.timeAgo}</span>
@@ -142,11 +171,14 @@ export function PostCard({ post }: PostCardProps) {
             >
                <ArrowBigUp className={`h-5 w-5 ${isLiked ? 'text-[#FF4500] fill-[#FF4500]' : 'hover:text-[#FF4500]'}`} />
             </button>
-            <span className={`min-w-6 text-center text-sm font-bold ${isLiked ? 'text-[#FF4500]' : 'text-[#D7DADC]'}`}>
-              {upvoteCount > 1000 ? (upvoteCount/1000).toFixed(1) + 'k' : upvoteCount === 0 ? post.upvotes : upvoteCount}
+            <span className={`min-w-6 text-center text-sm font-bold ${isLiked ? 'text-[#FF4500]' : isDownvoted ? 'text-[#7193FF]' : 'text-[#D7DADC]'}`}>
+              {upvoteCount > 1000 ? (upvoteCount/1000).toFixed(1) + 'k' : upvoteCount}
             </span>
-            <button className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23]">
-              <ArrowBigDown className="h-5 w-5 text-[#82959B] hover:text-blue-500" />
+            <button
+               onClick={handleDownvote}
+               className={`flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[#34444E] active:bg-[#151F23] ${isDownvoted ? 'text-[#7193FF]' : 'text-[#82959B]'}`}
+            >
+              <ArrowBigDown className={`h-5 w-5 ${isDownvoted ? 'text-[#7193FF] fill-[#7193FF]' : 'hover:text-[#7193FF]'}`} />
             </button>
           </div>
 

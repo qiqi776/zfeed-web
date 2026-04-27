@@ -81,10 +81,10 @@ export function Navbar() {
                 <button className="flex h-10 w-10 items-center justify-center rounded-full text-[#D7DADC] transition hover:bg-[#2A3C42]">
                   <Bell className="h-5 w-5" />
                 </button>
-                <button className="flex h-10 items-center justify-center gap-1.5 rounded-full px-3 text-[#D7DADC] transition hover:bg-[#2A3C42]">
+                <Link to="/submit" className="flex h-10 items-center justify-center gap-1.5 rounded-full px-3 text-[#D7DADC] transition hover:bg-[#2A3C42]">
                   <Plus className="h-5 w-5" />
                   <span className="hidden font-medium md:block">Create</span>
-                </button>
+                </Link>
               </div>
 
               {/* User Dropdown */}
@@ -113,7 +113,7 @@ export function Navbar() {
                      </div>
                      <ul className="py-2 flex flex-col text-[#D7DADC]">
                         <li>
-                          <Link onClick={() => setIsDropdownOpen(false)} to={`/user/${user.nickname}`} className="flex items-center px-4 py-2 hover:bg-[#2A3C42] transition text-sm font-semibold">
+                          <Link onClick={() => setIsDropdownOpen(false)} to={`/user/${user.user_id}`} className="flex items-center px-4 py-2 hover:bg-[#2A3C42] transition text-sm font-semibold">
                             <User className="mr-3 h-5 w-5 text-[#82959B]"/> View Profile
                           </Link>
                         </li>

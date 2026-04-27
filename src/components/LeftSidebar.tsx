@@ -3,7 +3,7 @@ import { TOPICS } from "../data/mockData";
 
 export function LeftSidebar() {
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-56px)] w-[260px] flex-col overflow-hidden hover:overflow-y-auto border-r border-[#34444E] bg-transparent pt-4 xl:flex flex-shrink-0 z-10 transition-all">
+    <aside className="sticky top-14 hidden h-[calc(100vh-56px)] w-[260px] flex-col overflow-hidden hover:overflow-y-auto thin-scrollbar border-r border-[#34444E] bg-transparent pt-4 xl:flex flex-shrink-0 z-10 transition-all">
       {/* Primary Links */}
       <div className="mb-4 px-4">
         <ul className="space-y-1">

@@ -1,6 +1,6 @@
 export function RightSidebar() {
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-56px)] w-[316px] flex-col overflow-hidden hover:overflow-y-auto gap-4 py-6 pr-4 lg:flex flex-shrink-0 z-10 transition-all">
+    <aside className="sticky top-14 hidden h-[calc(100vh-56px)] w-[316px] flex-col overflow-hidden hover:overflow-y-auto thin-scrollbar gap-4 py-6 pr-4 lg:flex flex-shrink-0 z-10 transition-all">
       {/* Premium Banner */}
       <div className="rounded-xl border border-[#34444E] bg-[#1A282D] p-3 shadow-sm">
         <div className="flex items-start gap-3">

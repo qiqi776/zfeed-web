@@ -12,6 +12,7 @@ export interface Post {
   subreddit: string;
   subredditIcon?: string;
   author: string;
+  authorId?: string;
   title: string;
   content?: string;
   imageUrl?: string;

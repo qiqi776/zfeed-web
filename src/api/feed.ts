@@ -26,8 +26,21 @@ export interface RecommendFeedResponse {
   snapshot_id?: string;
 }
 
+export interface UserFeedParams {
+  user_id: string;
+  viewer_id?: string;
+  cursor?: string;
+  page_size?: number;
+}
+
 export const feedApi = {
   getRecommendFeed: async (params: RecommendFeedParams): Promise<RecommendFeedResponse> => {
     return api.post("/feed/recommend", params);
+  },
+  getUserPublishFeed: async (params: UserFeedParams): Promise<RecommendFeedResponse> => {
+    return api.post("/feed/user/publish", params);
+  },
+  getUserFavoriteFeed: async (params: UserFeedParams): Promise<RecommendFeedResponse> => {
+    return api.post("/feed/user/favorite", params);
   }
 };

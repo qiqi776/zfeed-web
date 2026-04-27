@@ -21,8 +21,18 @@ export interface ContentDetail {
   is_following_author: boolean;
 }
 
+export interface PublishPostParams {
+  title: string;
+  content: string;
+  cover_url?: string;
+  tags?: string[];
+}
+
 export const contentApi = {
   getDetail: async (content_id: string): Promise<ContentDetail> => {
     return api.post("/content/detail", { content_id });
+  },
+  publishPost: async (params: PublishPostParams): Promise<{ content_id: string }> => {
+    return api.post("/content/publish", params);
   }
 };

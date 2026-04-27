@@ -16,6 +16,7 @@ import { RightSidebar } from "./components/RightSidebar";
 import { PostCard } from "./components/PostCard";
 import { PostDetail } from "./components/PostDetail";
 import { Profile } from "./components/Profile";
+import { CreatePost } from "./components/CreatePost";
 import { MOckPosts, generateMorePosts, Post } from "./data/mockData";
 
 // Extracted Feed Component
@@ -113,6 +114,7 @@ function Feed() {
                     id: item.content_id, // ensure unique
                     subreddit: "feed",
                     author: item.author_name,
+                    authorId: item.author_id,
                     title: item.title,
                     imageUrl: item.cover_url,
                     upvotes: item.like_count.toString(),
@@ -166,6 +168,7 @@ function PostView() {
     id: serverPost.content_id,
     subreddit: "feed",
     author: serverPost.author_name,
+    authorId: serverPost.author_id,
     title: serverPost.title,
     content: serverPost.article_content || serverPost.description,
     imageUrl: serverPost.cover_url,
@@ -224,6 +227,7 @@ export default function App() {
                   <Route path="/" element={<Feed />} />
                   <Route path="/post/:id" element={<PostView />} />
                   <Route path="/user/:username" element={<Profile />} />
+                  <Route path="/submit" element={<CreatePost />} />
                 </Routes>
               </motion.div>
             </AnimatePresence>
