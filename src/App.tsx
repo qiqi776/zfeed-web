@@ -17,10 +17,16 @@ import { PostCard } from "./components/PostCard";
 import { PostDetail } from "./components/PostDetail";
 import { Profile } from "./components/Profile";
 import { CreatePost } from "./components/CreatePost";
+import { EditPost } from "./components/EditPost";
 import { MOckPosts, generateMorePosts, Post } from "./data/mockData";
+import { useAuthStore } from "./store/useAuthStore";
+import { toast } from "sonner";
 
 // Extracted Feed Component
 function Feed() {
+  const [feedType, setFeedType] = useState<"recommend" | "follow">("recommend");
+  const { user } = useAuthStore();
+
   const {
     data,
     fetchNextPage,
@@ -28,10 +34,14 @@ function Feed() {
     isFetchingNextPage,
     status
   } = useInfiniteQuery({
-    queryKey: ['recommendFeed'],
-    queryFn: ({ pageParam }) => feedApi.getRecommendFeed({ cursor: pageParam, page_size: 10 }),
+    queryKey: ['feed', feedType],
+    queryFn: ({ pageParam }) => 
+      feedType === 'recommend' 
+        ? feedApi.getRecommendFeed({ cursor: pageParam as string, page_size: 10 })
+        : feedApi.getFollowFeed({ cursor: pageParam as string, page_size: 10 }),
     initialPageParam: '',
     getNextPageParam: (lastPage) => lastPage.has_more ? lastPage.next_cursor : undefined,
+    enabled: feedType === 'recommend' || !!user, // Only fetch follow feed if user is logged in
   });
 
   const observer = useRef<IntersectionObserver | null>(null);
@@ -58,29 +68,27 @@ function Feed() {
       className="flex w-full flex-col"
     >
       {/* Sorting Header */}
-      <div className="mb-4 flex items-center justify-between rounded-xl px-4 py-2 sm:border sm:border-[#34444E] sm:bg-[#1A282D] sm:px-3 sm:py-3 sm:shadow-sm">
-         <div className="flex items-center gap-1">
-            <button className="flex items-center gap-2 rounded-full bg-[#2A3C42] px-4 py-1.5 text-sm font-semibold text-[#D7DADC] transition border border-[#34444E]">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c-1.38 0-2.5-1.12-2.5-2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 0 2.5 2.5c0 1.38-1.12 2.5-2.5 2.5 1.38 0 2.5 1.12 2.5 2.5A2.5 2.5 0 0 1 11 17c1.38 0 2.5-1.12 2.5-2.5 0-1.38-1.12-2.5-2.5-2.5z"/><path d="M12 2v20"/><path d="M21 12H3"/></svg>
-              Best
+      <div className="mb-4 flex flex-col gap-3 rounded-xl px-4 py-2 sm:border sm:border-[#34444E] sm:bg-[#1A282D] sm:px-3 sm:py-3 sm:shadow-sm">
+         <div className="flex gap-4 border-b border-[#34444E] pb-2 px-1">
+            <button 
+              onClick={() => setFeedType("recommend")}
+              className={`pb-2 text-sm font-bold border-b-2 transition ${feedType === "recommend" ? "border-white text-white" : "border-transparent text-[#82959B] hover:text-[#D7DADC]"}`}
+            >
+               Recommend
             </button>
-            <button className="flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold text-[#82959B] transition hover:bg-[#2A3C42] hover:text-[#D7DADC]">
-               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c-1.38 0-2.5-1.12-2.5-2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 0 2.5 2.5c0 1.38-1.12 2.5-2.5 2.5 1.38 0 2.5 1.12 2.5 2.5A2.5 2.5 0 0 1 11 17c1.38 0 2.5-1.12 2.5-2.5 0-1.38-1.12-2.5-2.5-2.5z"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/></svg>
-              Hot
-            </button>
-            <button className="flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold text-[#82959B] transition hover:bg-[#2A3C42] hover:text-[#D7DADC]">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              New
-            </button>
-            <button className="flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold text-[#82959B] transition hover:bg-[#2A3C42] hover:text-[#D7DADC]">
-               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M12 20V10"/><path d="m18 20-6-10-6 10"/></svg>
-               Top
+            <button 
+              onClick={() => {
+                if (!user) {
+                  toast.error("Please login to view following feed");
+                  return;
+                }
+                setFeedType("follow");
+              }}
+              className={`pb-2 text-sm font-bold border-b-2 transition ${feedType === "follow" ? "border-white text-white" : "border-transparent text-[#82959B] hover:text-[#D7DADC]"}`}
+            >
+               Following
             </button>
          </div>
-         
-         <button className="hidden items-center gap-1 rounded-full px-2 py-1.5 text-sm font-semibold text-[#82959B] transition hover:bg-[#2A3C42] sm:flex">
-           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
-         </button>
       </div>
 
       {/* Posts Feed */}
@@ -89,10 +97,14 @@ function Feed() {
           <div className="flex w-full items-center justify-center py-6 pb-20">
             <Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" />
           </div>
+        ) : (!user && feedType === 'follow') ? (
+          <div className="flex w-full items-center justify-center py-10 pb-20 text-[#82959B]">
+            Please login to view following feed.
+          </div>
         ) : (
           <AnimatePresence>
-            {/* Display static mock posts first */}
-            {MOckPosts.map((post) => (
+            {/* Display static mock posts first only for recommend for now */}
+            {feedType === 'recommend' && MOckPosts.map((post) => (
               <motion.div
                 layout
                 key={post.id}
@@ -137,6 +149,12 @@ function Feed() {
                   </motion.div>
                  )
                })
+            )}
+
+            {status === 'success' && data.pages[0]?.items?.length === 0 && (
+              <div className="flex w-full items-center justify-center py-6 text-[#82959B]">
+                 No posts found.
+              </div>
             )}
           </AnimatePresence>
         )}
@@ -226,6 +244,7 @@ export default function App() {
                 <Routes location={location}>
                   <Route path="/" element={<Feed />} />
                   <Route path="/post/:id" element={<PostView />} />
+                  <Route path="/post/:id/edit" element={<EditPost />} />
                   <Route path="/user/:username" element={<Profile />} />
                   <Route path="/submit" element={<CreatePost />} />
                 </Routes>

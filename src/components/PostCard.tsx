@@ -6,6 +6,7 @@ import {
   MoreHorizontal,
   Bookmark,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, type MouseEvent } from "react";
@@ -261,7 +262,7 @@ export function PostCard({ post }: PostCardProps) {
           <div className="flex-1" />
 
           {user &&
-            user.user_id === post.author &&
+            (user.user_id === post.authorId || user.user_id === post.author) &&
             (showDeleteConfirm ? (
               <div className="flex items-center gap-1 z-20 pointer-events-auto">
                 <button
@@ -288,17 +289,27 @@ export function PostCard({ post }: PostCardProps) {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowDeleteConfirm(true);
-                }}
-                className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
-                title="Delete Post"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/post/${post.id}/edit`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] pointer-events-auto text-[#82959B]"
+                  title="Edit Post"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
+                  title="Delete Post"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             ))}
 
           {/* Save/Favorite */}

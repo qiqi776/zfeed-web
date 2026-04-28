@@ -37,6 +37,9 @@ export const feedApi = {
   getRecommendFeed: async (params: RecommendFeedParams): Promise<RecommendFeedResponse> => {
     return api.post("/feed/recommend", params);
   },
+  getFollowFeed: async (params: { cursor?: string; page_size?: number }): Promise<RecommendFeedResponse> => {
+    return api.post("/feed/follow", params);
+  },
   getUserPublishFeed: async (params: UserFeedParams): Promise<RecommendFeedResponse> => {
     return api.post("/feed/user/publish", params);
   },

@@ -37,6 +37,12 @@ export const contentApi = {
   ): Promise<{ content_id: string }> => {
     return api.post("/content/publish", params);
   },
+  editArticle: async (
+    content_id: string,
+    params: { title?: string; description?: string; cover?: string; content?: string }
+  ): Promise<{ content_id: string }> => {
+    return api.put(`/content/article/${content_id}`, params);
+  },
   deletePost: async (content_id: string): Promise<void> => {
     return api.delete("/content", { data: { content_id } });
   },
