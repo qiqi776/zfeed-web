@@ -305,29 +305,32 @@ export function setupMockApi() {
   // Mock deletes
   mock.onDelete("/content").reply((config) => {
     const data = JSON.parse(config.data || "{}");
-    const idx = MOckPosts.findIndex(p => p.id === data.content_id);
+    const idx = MOckPosts.findIndex((p) => p.id === data.content_id);
     if (idx !== -1) MOckPosts.splice(idx, 1);
     return [200, {}];
   });
 
   mock.onDelete("/interaction/comment").reply((config) => {
     const data = JSON.parse(config.data || "{}");
-    const post = MOckPosts.find(p => p.id === data.content_id);
+    const post = MOckPosts.find((p) => p.id === data.content_id);
     if (post && post.commentList) {
-       const removeComment = (comments: any[]) => {
-          for (let i = 0; i < comments.length; i++) {
-            if (comments[i].id === data.comment_id) {
-               comments.splice(i, 1);
-               return true;
-            }
-            if (comments[i].replies && removeComment(comments[i].replies)) {
-               return true;
-            }
+      const removeComment = (comments: any[]) => {
+        for (let i = 0; i < comments.length; i++) {
+          if (comments[i].id === data.comment_id) {
+            comments.splice(i, 1);
+            return true;
           }
-          return false;
-       };
-       removeComment(post.commentList);
-       post.comments = Math.max(0, parseInt(post.comments || "0") - 1).toString();
+          if (comments[i].replies && removeComment(comments[i].replies)) {
+            return true;
+          }
+        }
+        return false;
+      };
+      removeComment(post.commentList);
+      post.comments = Math.max(
+        0,
+        parseInt(post.comments || "0") - 1,
+      ).toString();
     }
     return [200, {}];
   });
@@ -370,6 +373,51 @@ export function setupMockApi() {
     like_received_count: 10,
     favorite_received_count: 10,
     content_count: 10,
+  });
+
+  mock.onPut("/users/me/profile").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    return [
+      200,
+      {
+        user_id: "me_mock",
+        nickname: data.nickname || "Mock User",
+        bio: data.bio || "Mock bio",
+        avatar:
+          data.avatar || "https://api.dicebear.com/7.x/identicon/svg?seed=mock",
+      },
+    ];
+  });
+
+  mock.onPost("/users/avatar/upload").reply(200, {
+    url: "https://api.dicebear.com/7.x/identicon/svg?seed=new_avatar",
+    object_key: "mock_avatar_key",
+  });
+
+  mock.onPost("/user/followers").reply((config) => {
+    return [
+      200,
+      {
+        items: [
+          {
+            user_id: "follower_1",
+            nickname: "Follower One",
+            avatar:
+              "https://api.dicebear.com/7.x/identicon/svg?seed=follower_1",
+            bio: "Hello world",
+          },
+          {
+            user_id: "follower_2",
+            nickname: "Follower Two",
+            avatar:
+              "https://api.dicebear.com/7.x/identicon/svg?seed=follower_2",
+            bio: "React fan",
+          },
+        ],
+        next_cursor: "",
+        has_more: false,
+      },
+    ];
   });
 
   // Any other routes return 200 by default or just pass through

@@ -14,6 +14,8 @@ import { feedApi } from "../api/feed";
 import { Post, MOckPosts } from "../data/mockData";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
+import { FollowersListModal } from "./FollowersListModal";
+import { EditProfileModal } from "./EditProfileModal";
 
 export function Profile() {
   const { username: userId } = useParams(); // URL param is actually userId
@@ -21,6 +23,8 @@ export function Profile() {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("POSTS");
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const {
     data: profileResponse,
@@ -184,7 +188,14 @@ export function Profile() {
           <div className="flex-1" />
 
           {/* Action Button */}
-          {!isSelf && (
+          {isSelf ? (
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="rounded-full px-5 py-1.5 text-sm font-bold transition active:scale-95 bg-[#2A3C42] text-[#D7DADC] hover:bg-[#34444E]"
+            >
+              Edit profile
+            </button>
+          ) : (
             <button
               onClick={handleFollowToggle}
               disabled={followMutation.isPending || unfollowMutation.isPending}
@@ -209,8 +220,11 @@ export function Profile() {
             </span>
             <span className="text-[#82959B] text-xs">Post Karma</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[#D7DADC] font-bold text-sm">
+          <div
+            className="flex flex-col cursor-pointer transition hover:opacity-80"
+            onClick={() => setIsFollowersModalOpen(true)}
+          >
+            <span className="text-[#D7DADC] font-bold text-sm hover:underline">
               {counts.follower_count}
             </span>
             <span className="text-[#82959B] text-xs">Followers</span>
@@ -308,6 +322,18 @@ export function Profile() {
           </div>
         )}
       </div>
+
+      <FollowersListModal
+        isOpen={isFollowersModalOpen}
+        onClose={() => setIsFollowersModalOpen(false)}
+        userId={userId!}
+      />
+
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        profile={profile}
+      />
     </motion.div>
   );
 }
