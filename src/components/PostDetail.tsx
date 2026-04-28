@@ -178,7 +178,7 @@ export function PostDetail({ post }: { post: Post }) {
         <div className="p-3 sm:px-4 sm:pt-4">
           <div className="flex items-center gap-2 text-xs text-[#82959B]">
             <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20 relative group z-20 pointer-events-auto">
-              <Link to={`/user/${post.author}`}>
+              <Link to={`/user/${post.authorId || post.author}`}>
                 {post.subredditIcon ? (
                   <img
                     src={post.subredditIcon}
@@ -201,7 +201,7 @@ export function PostDetail({ post }: { post: Post }) {
               </span>
               <span className="text-xs text-[#82959B] flex items-center relative group w-max block z-20 pointer-events-auto">
                 <Link
-                  to={`/user/${post.author}`}
+                  to={`/user/${post.authorId || post.author}`}
                   className="hover:text-[#D7DADC] hover:underline transition"
                 >
                   u/{post.author}

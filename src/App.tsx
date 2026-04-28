@@ -125,6 +125,7 @@ function Feed() {
                  const post: Post = {
                     id: item.content_id, // ensure unique
                     subreddit: "feed",
+                    subredditIcon: item.author_avatar,
                     author: item.author_name,
                     authorId: item.author_id,
                     title: item.title,
@@ -185,6 +186,7 @@ function PostView() {
   const post: Post | null = mockPost || (serverPost ? {
     id: serverPost.content_id,
     subreddit: "feed",
+    subredditIcon: serverPost.author_avatar,
     author: serverPost.author_name,
     authorId: serverPost.author_id,
     title: serverPost.title,

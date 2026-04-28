@@ -277,6 +277,7 @@ export function Profile() {
                 const post: Post = {
                   id: item.content_id,
                   subreddit: "user",
+                  subredditIcon: item.author_avatar,
                   author: item.author_name,
                   authorId: item.author_id,
                   title: item.title,

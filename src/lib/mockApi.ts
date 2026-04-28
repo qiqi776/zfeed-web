@@ -5,6 +5,8 @@ import { useAuthStore } from "../store/useAuthStore";
 
 export function setupMockApi() {
   const mock = new MockAdapter(api, { delayResponse: 500 });
+  const followedUsers = new Set<string>();
+  const userFollowerCounts = new Map<string, number>();
 
   let mockMe = {
     user_id: "me_mock",
@@ -214,35 +216,27 @@ export function setupMockApi() {
     return [
       200,
       {
-        content_info: {
-          content_id: post.id,
-          title: post.title,
-          content: post.content || "",
-          cover_url: post.imageUrl || "",
-          tags: [],
-          published_at: Math.floor(Date.now() / 1000) - 3600,
-        },
-        author_info: {
-          user_id: post.authorId || post.author,
-          nickname: post.author,
-          avatar:
-            post.subredditIcon ||
-            "https://api.dicebear.com/7.x/identicon/svg?seed=" + post.author,
-          bio: "",
-          follower_count: 100,
-          content_count: 5,
-          is_following: false,
-        },
-        stats: {
-          view_count: 1000,
-          like_count:
-            parseInt(post.upvotes.replace(/k/, "000").replace(/\./, "")) || 0,
-          reply_count: parseInt(post.comments) || 0,
-          favorite_count: 0,
-          share_count: 0,
-          is_liked: !!post.isLiked,
-          is_favorited: !!post.isFavorited,
-        },
+        content_id: post.id,
+        content_type: 1, // 1 for article
+        author_id: post.authorId || post.author,
+        author_name: post.author,
+        author_avatar:
+          post.subredditIcon ||
+          "https://api.dicebear.com/7.x/identicon/svg?seed=" + post.author,
+        title: post.title,
+        description: post.content || "",
+        cover_url: post.imageUrl || "",
+        article_content: post.content || "",
+        video_url: "",
+        video_duration: 0,
+        published_at: Math.floor(Date.now() / 1000) - 3600,
+        like_count:
+          parseInt(post.upvotes.replace(/k/, "000").replace(/\./, "")) || 0,
+        favorite_count: 0,
+        comment_count: parseInt(post.comments) || 0,
+        is_liked: !!post.isLiked,
+        is_favorited: !!post.isFavorited,
+        is_following_author: followedUsers.has(post.authorId || post.author),
       },
     ];
   });
@@ -308,6 +302,7 @@ export function setupMockApi() {
     const newPost = {
       id: "mock_post_" + Date.now(),
       subreddit: "users",
+      subredditIcon: currentUser?.avatar || "https://api.dicebear.com/7.x/identicon/svg?seed=" + authorName,
       author: authorName,
       authorId: authorId,
       title: title || "Untitled",
@@ -382,24 +377,22 @@ export function setupMockApi() {
   mock.onPost("/interaction/unlike").reply(200, {});
   mock.onPost("/interaction/favorite").reply(200, {});
   mock.onDelete("/interaction/favorite").reply(200, {});
-  const followedUsers = new Set<string>();
-  const userFollowerCounts = new Map<string, number>();
 
   mock.onPost("/interaction/followings").reply((config) => {
     const data = JSON.parse(config.data || "{}");
-    if (data.target_id) {
-       followedUsers.add(data.target_id);
-       const current = userFollowerCounts.get(data.target_id) || 100;
-       userFollowerCounts.set(data.target_id, current + 1);
+    if (data.target_user_id) {
+       followedUsers.add(data.target_user_id);
+       const current = userFollowerCounts.get(data.target_user_id) || 100;
+       userFollowerCounts.set(data.target_user_id, current + 1);
     }
     return [200, { is_followed: true }];
   });
   mock.onDelete("/interaction/followings").reply((config) => {
     const data = JSON.parse(config.data || "{}");
-    if (data.target_id) {
-       followedUsers.delete(data.target_id);
-       const current = userFollowerCounts.get(data.target_id) || 100;
-       userFollowerCounts.set(data.target_id, Math.max(0, current - 1));
+    if (data.target_user_id) {
+       followedUsers.delete(data.target_user_id);
+       const current = userFollowerCounts.get(data.target_user_id) || 100;
+       userFollowerCounts.set(data.target_user_id, Math.max(0, current - 1));
     }
     return [200, { is_followed: false }];
   });
@@ -443,6 +436,7 @@ export function setupMockApi() {
     const currentUserId = useAuthStore.getState().user?.user_id;
     const isMe = userId === currentUserId || userId === "me_mock";
 
+    const userContentCount = MOckPosts.filter((p) => p.authorId === userId || p.author === userId).length;
     return [
       200,
       {
@@ -459,7 +453,7 @@ export function setupMockApi() {
         counts: {
           follower_count: userFollowerCounts.get(userId) || 100,
           followee_count: 50,
-          content_count: 10,
+          content_count: userContentCount,
           like_received_count: 1000,
           favorite_received_count: 500,
         },
@@ -470,17 +464,21 @@ export function setupMockApi() {
     ];
   });
 
-  mock.onGet("/users/me").reply(() => [
-    200,
-    {
-      user_info: mockMe,
-      followee_count: 50,
-      follower_count: 100,
-      like_received_count: 1000,
-      favorite_received_count: 500,
-      content_count: 10,
-    },
-  ]);
+  mock.onGet("/users/me").reply(() => {
+    const userId = useAuthStore.getState().user?.user_id || mockMe.user_id;
+    const userContentCount = MOckPosts.filter((p) => p.authorId === userId || p.author === userId).length;
+    return [
+      200,
+      {
+        user_info: mockMe,
+        followee_count: 50,
+        follower_count: userFollowerCounts.get(userId) || 100,
+        like_received_count: 1000,
+        favorite_received_count: 500,
+        content_count: userContentCount,
+      },
+    ];
+  });
 
   mock.onPut("/users/me/profile").reply((config) => {
     const data = JSON.parse(config.data || "{}");
