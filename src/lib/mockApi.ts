@@ -1,9 +1,17 @@
 import MockAdapter from "axios-mock-adapter";
 import { api } from "./axios";
 import { MOckPosts, generateMorePosts } from "../data/mockData";
+import { useAuthStore } from "../store/useAuthStore";
 
 export function setupMockApi() {
   const mock = new MockAdapter(api, { delayResponse: 500 });
+
+  let mockMe = {
+    user_id: "me_mock",
+    nickname: "Mock User",
+    bio: "Mock bio",
+    avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=mock",
+  };
 
   // mock the recommend feed
   mock.onPost("/feed/recommend").reply((config) => {
@@ -72,8 +80,9 @@ export function setupMockApi() {
       {
         token: "mock-access-token",
         expired_at: Date.now() + 3600000,
-        user_id: data.mobile || "mock_user",
-        nickname: data.mobile || "Mock User",
+        user_id: "me_mock",
+        nickname: mockMe.nickname,
+        avatar: mockMe.avatar
       },
     ];
   });
@@ -85,8 +94,9 @@ export function setupMockApi() {
       {
         token: "mock-access-token",
         expired_at: Date.now() + 3600000,
-        user_id: data.nickname || data.mobile || "mock_user",
-        nickname: data.nickname || "Mock User",
+        user_id: "me_mock",
+        nickname: data.nickname || mockMe.nickname,
+        avatar: mockMe.avatar
       },
     ];
   });
@@ -338,14 +348,19 @@ export function setupMockApi() {
   // Mock profile
   mock.onGet(/\/user\/profile\/.+/).reply((config) => {
     const userId = config.url?.split("/").pop() || "unknown";
+    const currentUserId = useAuthStore.getState().user?.user_id;
+    const isMe = userId === currentUserId || userId === "me_mock";
+
     return [
       200,
       {
         user_profile: {
           user_id: userId,
-          nickname: userId,
-          avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=" + userId,
-          bio: "Mock user bio",
+          nickname: isMe ? mockMe.nickname : userId,
+          avatar: isMe
+            ? mockMe.avatar
+            : "https://api.dicebear.com/7.x/identicon/svg?seed=" + userId,
+          bio: isMe ? mockMe.bio : "Mock user bio",
           gender: 0,
           birthday: "",
         },
@@ -363,30 +378,25 @@ export function setupMockApi() {
     ];
   });
 
-  mock.onGet("/users/me").reply(200, {
-    user_info: {
-      user_id: "me_mock",
-      nickname: "Mock User",
+  mock.onGet("/users/me").reply(() => [
+    200,
+    {
+      user_info: mockMe,
+      followee_count: 50,
+      follower_count: 100,
+      like_received_count: 1000,
+      favorite_received_count: 500,
+      content_count: 10,
     },
-    followee_count: 10,
-    follower_count: 10,
-    like_received_count: 10,
-    favorite_received_count: 10,
-    content_count: 10,
-  });
+  ]);
 
   mock.onPut("/users/me/profile").reply((config) => {
     const data = JSON.parse(config.data || "{}");
-    return [
-      200,
-      {
-        user_id: "me_mock",
-        nickname: data.nickname || "Mock User",
-        bio: data.bio || "Mock bio",
-        avatar:
-          data.avatar || "https://api.dicebear.com/7.x/identicon/svg?seed=mock",
-      },
-    ];
+    if (data.nickname) mockMe.nickname = data.nickname;
+    if (data.bio) mockMe.bio = data.bio;
+    if (data.avatar) mockMe.avatar = data.avatar;
+
+    return [200, mockMe];
   });
 
   mock.onPost("/users/avatar/upload").reply(200, {
