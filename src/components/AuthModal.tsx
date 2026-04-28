@@ -63,18 +63,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div
+      <div 
         className="w-full max-w-md overflow-hidden rounded-2xl bg-[#1A282D] border border-[#34444E] shadow-2xl animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative p-6">
-          <button
+          <button 
             onClick={onClose}
             className="absolute right-4 top-4 rounded-full p-2 text-[#82959B] transition hover:bg-[#2A3C42] hover:text-[#D7DADC]"
           >
             <X className="h-5 w-5" />
           </button>
-
+          
           <h2 className="text-2xl font-bold text-[#D7DADC] mb-2">
             {isLogin ? "Log in" : "Sign up"}
           </h2>
@@ -92,8 +92,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <UserIcon className="h-5 w-5 text-[#82959B]" />
                   </div>
-                  <input
-                    type="text"
+                  <input 
+                    type="text" 
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                     className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
@@ -103,7 +103,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
               </div>
             )}
-
+            
             <div className="flex flex-col space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-[#D7DADC]">
                 Mobile
@@ -112,8 +112,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <Mail className="h-5 w-5 text-[#82959B]" />
                 </div>
-                <input
-                  type="text"
+                <input 
+                  type="text" 
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
                   className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
@@ -131,8 +131,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <Lock className="h-5 w-5 text-[#82959B]" />
                 </div>
-                <input
-                  type="password"
+                <input 
+                  type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
@@ -142,7 +142,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
             </div>
 
-            <button
+            <button 
               type="submit"
               disabled={isLoading}
               className="mt-2 w-full rounded-full bg-[#FF4500] py-3 font-bold text-white transition hover:bg-[#E03D00] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -154,7 +154,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="mt-6 flex items-center justify-center">
             <p className="text-sm text-[#D7DADC]">
               {isLogin ? "New to zfeed? " : "Already a member? "}
-              <button
+              <button 
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
                 className="font-bold text-[#FF4500] hover:underline"

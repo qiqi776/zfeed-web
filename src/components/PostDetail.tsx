@@ -31,8 +31,9 @@ export function PostDetail({ post }: { post: Post }) {
     post.upvoteCount || parseInt(post.upvotes) || 0,
   );
   const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const handleLike = async (e: MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to like posts");
@@ -275,16 +276,46 @@ export function PostDetail({ post }: { post: Post }) {
 
           <div className="flex-1" />
 
-          {user && user.user_id === post.author && (
-            <button
-              onClick={handleDeletePost}
-              disabled={deletePostMutation.isPending}
-              className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
-              title="Delete Post"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
+          {user &&
+            user.user_id === post.author &&
+            (showDeleteConfirm ? (
+              <div className="flex items-center gap-1 z-20 pointer-events-auto">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deletePostMutation.mutate();
+                    setShowDeleteConfirm(false);
+                  }}
+                  disabled={deletePostMutation.isPending}
+                  className="flex h-9 items-center justify-center rounded-full bg-red-500/20 px-3 transition hover:bg-red-500/30 text-red-500 text-xs font-bold"
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] text-[#82959B] text-xs font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowDeleteConfirm(true);
+                }}
+                className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
+                title="Delete Post"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            ))}
 
           <button
             onClick={handleFavorite}
@@ -389,6 +420,8 @@ const RealCommentThread: FC<{
   const [isLiked, setIsLiked] = useState(comment.is_liked || false);
   const [likeCount, setLikeCount] = useState(comment.like_count || 0);
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const handleLike = async () => {
     if (!user) {
       toast.error("Please login to like comments");
@@ -475,12 +508,6 @@ const RealCommentThread: FC<{
     onError: () => toast.error("Failed to delete comment"),
   });
 
-  const handleDeleteComment = () => {
-    if (confirm("Are you sure you want to delete this comment?")) {
-      deleteCommentMutation.mutate();
-    }
-  };
-
   return (
     <div className="flex gap-2">
       <div className="flex flex-col items-center">
@@ -556,17 +583,48 @@ const RealCommentThread: FC<{
             <span className="text-xs font-bold text-[#82959B]">Share</span>
           </button>
 
-          {user && user.user_id === comment.user_id && (
-            <button
-              onClick={handleDeleteComment}
-              disabled={deleteCommentMutation.isPending}
-              className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B]"
-              title="Delete Comment"
-            >
-              <Trash2 className="h-3 w-3" />
-              <span className="text-xs font-bold">Delete</span>
-            </button>
-          )}
+          {user &&
+            user.user_id === comment.user_id &&
+            (showDeleteConfirm ? (
+              <div className="flex items-center gap-1 z-20 pointer-events-auto">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteCommentMutation.mutate();
+                    setShowDeleteConfirm(false);
+                  }}
+                  disabled={deleteCommentMutation.isPending}
+                  className="flex h-7 items-center justify-center rounded-full bg-red-500/20 px-2 transition hover:bg-red-500/30 text-red-500 text-xs font-bold"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Confirm
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex h-7 items-center justify-center rounded-full bg-[#2A3C42] px-2 transition hover:bg-[#34444E] text-[#82959B] text-xs font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowDeleteConfirm(true);
+                }}
+                className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B]"
+                title="Delete Comment"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span className="text-xs font-bold">Delete</span>
+              </button>
+            ))}
 
           <button className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-[#2A3C42]">
             <MoreHorizontal className="h-4 w-4 text-[#82959B]" />

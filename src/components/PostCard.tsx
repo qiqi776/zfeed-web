@@ -30,6 +30,7 @@ export function PostCard({ post }: PostCardProps) {
     post.upvoteCount || parseInt(post.upvotes) || 0,
   );
   const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleLike = async (e: MouseEvent) => {
     e.preventDefault();
@@ -259,16 +260,46 @@ export function PostCard({ post }: PostCardProps) {
 
           <div className="flex-1" />
 
-          {user && user.user_id === post.author && (
-            <button
-              onClick={handleDelete}
-              disabled={deletePostMutation.isPending}
-              className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
-              title="Delete Post"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
+          {user &&
+            user.user_id === post.author &&
+            (showDeleteConfirm ? (
+              <div className="flex items-center gap-1 z-20 pointer-events-auto">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deletePostMutation.mutate();
+                    setShowDeleteConfirm(false);
+                  }}
+                  disabled={deletePostMutation.isPending}
+                  className="flex h-9 items-center justify-center rounded-full bg-red-500/20 px-3 transition hover:bg-red-500/30 text-red-500 text-xs font-bold"
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-[#34444E] text-[#82959B] text-xs font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowDeleteConfirm(true);
+                }}
+                className="flex h-9 items-center justify-center rounded-full bg-[#2A3C42] px-3 transition hover:bg-red-900/30 hover:text-red-500 pointer-events-auto text-[#82959B]"
+                title="Delete Post"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            ))}
 
           {/* Save/Favorite */}
           <button
