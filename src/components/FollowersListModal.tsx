@@ -9,22 +9,30 @@ interface FollowersListModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
+  type?: "followers" | "followings";
 }
 
 export function FollowersListModal({
   isOpen,
   onClose,
   userId,
+  type = "followers",
 }: FollowersListModalProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
-      queryKey: ["followers", userId],
+      queryKey: [type, userId],
       queryFn: ({ pageParam }) =>
-        userApi.getFollowers({
-          user_id: userId,
-          cursor: pageParam as string,
-          page_size: 20,
-        }),
+        type === "followers"
+          ? userApi.getFollowers({
+              user_id: userId,
+              cursor: pageParam as string,
+              page_size: 20,
+            })
+          : userApi.getFollowings({
+              user_id: userId,
+              cursor: pageParam as string,
+              page_size: 20,
+            }),
       initialPageParam: "",
       getNextPageParam: (lastPage) =>
         lastPage.has_more ? lastPage.next_cursor : undefined,
@@ -54,7 +62,7 @@ export function FollowersListModal({
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#34444E] px-6 py-4">
-            <h2 className="text-xl font-bold text-[#D7DADC]">Followers</h2>
+            <h2 className="text-xl font-bold text-[#D7DADC]">{type === "followers" ? "Followers" : "Following"}</h2>
             <button
               onClick={onClose}
               className="rounded-full p-2 text-[#82959B] transition hover:bg-[#1A282D] hover:text-[#D7DADC]"
@@ -126,7 +134,7 @@ export function FollowersListModal({
               </div>
             ) : (
               <div className="text-center py-8 text-[#82959B]">
-                No followers yet.
+                {type === "followers" ? "No followers yet." : "Not following anyone yet."}
               </div>
             )}
           </div>

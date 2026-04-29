@@ -293,13 +293,13 @@ export function setupMockApi() {
   });
 
   // Mock post/comment publish
-  mock.onPost("/content/publish").reply((config) => {
+  mock.onPost("/content/article/publish").reply((config) => {
     const data = JSON.parse(config.data || "{}");
-    const { title, content, cover_url } = data;
+    const { title, content, cover } = data;
     const currentUser = useAuthStore.getState().user;
     const authorId = currentUser?.user_id || "me_mock";
     const authorName = currentUser?.nickname || "me_mock";
-    const newPost = {
+    const newPost: Post = {
       id: "mock_post_" + Date.now(),
       subreddit: "users",
       subredditIcon: currentUser?.avatar || "https://api.dicebear.com/7.x/identicon/svg?seed=" + authorName,
@@ -307,10 +307,35 @@ export function setupMockApi() {
       authorId: authorId,
       title: title || "Untitled",
       content: content || "",
+      imageUrl: cover || "",
+      upvotes: "0",
+      comments: "0",
+      time: "just now",
+      contentType: 10,
+    };
+    MOckPosts.unshift(newPost);
+    return [200, { content_id: newPost.id }];
+  });
+
+  mock.onPost("/content/video/publish").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const { title, video_url, cover_url } = data;
+    const currentUser = useAuthStore.getState().user;
+    const authorId = currentUser?.user_id || "me_mock";
+    const authorName = currentUser?.nickname || "me_mock";
+    const newPost: Post = {
+      id: "mock_post_" + Date.now(),
+      subreddit: "users",
+      subredditIcon: currentUser?.avatar || "https://api.dicebear.com/7.x/identicon/svg?seed=" + authorName,
+      author: authorName,
+      authorId: authorId,
+      title: title || "Untitled",
+      videoUrl: video_url || "",
       imageUrl: cover_url || "",
       upvotes: "0",
       comments: "0",
-      timeAgo: "just now",
+      time: "just now",
+      contentType: 20,
     };
     MOckPosts.unshift(newPost);
     return [200, { content_id: newPost.id }];
@@ -324,6 +349,18 @@ export function setupMockApi() {
        if (data.title) post.title = data.title;
        if (data.content) post.content = data.content;
        if (data.cover) post.imageUrl = data.cover;
+    }
+    return [200, { content_id: id }];
+  });
+
+  mock.onPut(/\/content\/video\/.+/).reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const id = config.url?.split("/").pop();
+    const post = MOckPosts.find(p => p.id === id);
+    if (post) {
+       if (data.title) post.title = data.title;
+       if (data.video_url !== undefined) post.videoUrl = data.video_url;
+       if (data.cover_url !== undefined) post.imageUrl = data.cover_url;
     }
     return [200, { content_id: id }];
   });
@@ -494,7 +531,29 @@ export function setupMockApi() {
     object_key: "mock_avatar_key",
   });
 
+  mock.onPost("/user/followings").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const userId = data.user_id;
+    // We only care for current user right now
+    const items = Array.from(followedUsers).map(id => ({
+      user_id: id,
+      nickname: id, // mock nickname
+      avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=" + id,
+      bio: "Following this user"
+    }));
+    return [
+      200,
+      {
+        items,
+        next_cursor: "",
+        has_more: false
+      }
+    ];
+  });
+
   mock.onPost("/user/followers").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const userId = data.user_id;
     return [
       200,
       {

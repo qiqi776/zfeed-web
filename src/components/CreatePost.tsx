@@ -1,7 +1,7 @@
 import { useState, type SyntheticEvent } from "react";
-import { ArrowLeft, Image as ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Video, FileText, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { contentApi } from "../api/content";
 import { toast } from "sonner";
@@ -12,19 +12,20 @@ export function CreatePost() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   
+  const [postType, setPostType] = useState<"article" | "video">("article");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
 
-  const publishMutation = useMutation({
-    mutationFn: () => contentApi.publishPost({
+  const publishArticleMutation = useMutation({
+    mutationFn: () => contentApi.publishArticle({
       title,
       content,
-      cover_url: coverUrl || undefined,
+      cover: coverUrl || undefined,
     }),
     onSuccess: (data) => {
-      toast.success("Post published successfully!");
-      // Invalidate feed queries to show the new post
+      toast.success("Article published successfully!");
       queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
       if (user) {
          queryClient.invalidateQueries({ queryKey: ['userFeed', user.user_id] });
@@ -32,7 +33,26 @@ export function CreatePost() {
       navigate(`/post/${data.content_id}`);
     },
     onError: () => {
-      toast.error("Failed to publish post.");
+      toast.error("Failed to publish article.");
+    }
+  });
+
+  const publishVideoMutation = useMutation({
+    mutationFn: () => contentApi.publishVideo({
+      title,
+      video_url: videoUrl,
+      cover_url: coverUrl || "",
+    }),
+    onSuccess: (data) => {
+      toast.success("Video published successfully!");
+      queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
+      if (user) {
+         queryClient.invalidateQueries({ queryKey: ['userFeed', user.user_id] });
+      }
+      navigate(`/post/${data.content_id}`);
+    },
+    onError: () => {
+      toast.error("Failed to publish video.");
     }
   });
 
@@ -42,8 +62,39 @@ export function CreatePost() {
       toast.error("Title is required");
       return;
     }
-    publishMutation.mutate();
+    
+    if (postType === "article") {
+      publishArticleMutation.mutate();
+    } else {
+      if (!videoUrl.trim()) {
+        toast.error("Video URL is required");
+        return;
+      }
+      if (!/^https?:\/\//i.test(videoUrl.trim())) {
+         toast.error("Please enter a valid video URL (http:// or https://)");
+         return;
+      }
+      // Simple regex to check for common video extensions at the end of the pathname
+      try {
+         const urlObj = new URL(videoUrl.trim());
+         if (!/\.(mp4|webm|ogg|mov|mkv|m3u8)$/i.test(urlObj.pathname)) {
+            toast.error("URL must point to a valid video file (.mp4, .webm, etc.)");
+            return;
+         }
+      } catch (e) {
+         toast.error("Invalid URL format");
+         return;
+      }
+      
+      if (!coverUrl.trim()) {
+        toast.error("Cover Image URL is required for videos");
+        return;
+      }
+      publishVideoMutation.mutate();
+    }
   };
+
+  const isPending = publishArticleMutation.isPending || publishVideoMutation.isPending;
 
   return (
     <motion.div 
@@ -67,6 +118,32 @@ export function CreatePost() {
       </div>
 
       <div className="bg-[#1A282D] rounded-xl border border-[#34444E] overflow-hidden">
+        {/* Post Type Selector */}
+        <div className="flex border-b border-[#34444E]">
+          <button
+            type="button"
+            onClick={() => setPostType("article")}
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition relative ${postType === "article" ? "text-white" : "text-[#82959B] hover:bg-[#2A3C42]"}`}
+          >
+            <FileText className="w-5 h-5" />
+            Post
+            {postType === "article" && (
+              <motion.div layoutId="create_post_tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPostType("video")}
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition relative ${postType === "video" ? "text-white" : "text-[#82959B] hover:bg-[#2A3C42]"}`}
+          >
+            <Video className="w-5 h-5" />
+            Video
+            {postType === "video" && (
+              <motion.div layoutId="create_post_tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+            )}
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 flex flex-col gap-4">
           
           <input
@@ -78,16 +155,42 @@ export function CreatePost() {
             maxLength={300}
           />
           
-          <div className="flex flex-col gap-2">
-             <textarea
-               placeholder="Text (optional)"
-               value={content}
-               onChange={(e) => setContent(e.target.value)}
-               className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] min-h-[200px] focus:outline-none focus:ring-1 focus:ring-[#82959B] resize-y"
-             />
-          </div>
+          <AnimatePresence mode="popLayout">
+            {postType === "article" ? (
+              <motion.div
+                key="article"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex flex-col gap-2"
+              >
+                <textarea
+                  placeholder="Text (optional)"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] min-h-[200px] focus:outline-none focus:ring-1 focus:ring-[#82959B] resize-y"
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="video"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex flex-col gap-2"
+              >
+                <input
+                  type="text"
+                  placeholder="Video URL (e.g., https://...)"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] focus:outline-none focus:ring-1 focus:ring-[#82959B]"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-4">
              <label className="text-sm text-[#82959B] font-semibold flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" /> Cover Image URL (optional)
              </label>
@@ -108,10 +211,10 @@ export function CreatePost() {
           <div className="flex justify-end mt-4 pt-4 border-t border-[#34444E]">
             <button
               type="submit"
-              disabled={publishMutation.isPending || !title.trim()}
+              disabled={isPending || !title.trim() || (postType === "video" && (!videoUrl.trim() || !coverUrl.trim()))}
               className="px-6 py-2 bg-[#D7DADC] text-[#0B1416] font-bold rounded-full hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {publishMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Publish
             </button>
           </div>

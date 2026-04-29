@@ -135,6 +135,7 @@ function Feed() {
                     timeAgo: new Date(item.published_at * 1000).toLocaleDateString(),
                     isLiked: item.is_liked,
                     upvoteCount: item.like_count,
+                    contentType: item.content_type,
                  };
                  return (
                   <motion.div

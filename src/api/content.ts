@@ -21,21 +21,36 @@ export interface ContentDetail {
   is_following_author: boolean;
 }
 
-export interface PublishPostParams {
+export interface PublishArticleParams {
   title: string;
   content: string;
-  cover_url?: string;
-  tags?: string[];
+  cover?: string;
+  visibility?: number;
+  description?: string;
+}
+
+export interface PublishVideoParams {
+  title: string;
+  video_url: string;
+  cover_url: string;
+  visibility?: number;
+  description?: string;
+  duration?: number;
 }
 
 export const contentApi = {
   getDetail: async (content_id: string): Promise<ContentDetail> => {
     return api.post("/content/detail", { content_id });
   },
-  publishPost: async (
-    params: PublishPostParams,
+  publishArticle: async (
+    params: PublishArticleParams,
   ): Promise<{ content_id: string }> => {
-    return api.post("/content/publish", params);
+    return api.post("/content/article/publish", params);
+  },
+  publishVideo: async (
+    params: PublishVideoParams,
+  ): Promise<{ content_id: string }> => {
+    return api.post("/content/video/publish", params);
   },
   editArticle: async (
     content_id: string,
@@ -43,7 +58,13 @@ export const contentApi = {
   ): Promise<{ content_id: string }> => {
     return api.put(`/content/article/${content_id}`, params);
   },
+  editVideo: async (
+    content_id: string,
+    params: { title?: string; description?: string; video_url?: string; cover_url?: string; duration?: number }
+  ): Promise<{ content_id: string }> => {
+    return api.put(`/content/video/${content_id}`, params);
+  },
   deletePost: async (content_id: string): Promise<void> => {
-    return api.delete("/content", { data: { content_id } });
+    return api.delete(`/content/${content_id}`);
   },
 };

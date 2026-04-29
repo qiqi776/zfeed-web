@@ -16,6 +16,7 @@ export function EditPost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
 
   const { data: post, isLoading } = useQuery({
     queryKey: ['postDetail', id],
@@ -32,16 +33,17 @@ export function EditPost() {
        setTitle(post.title || "");
        setContent(post.article_content || "");
        setCoverUrl(post.cover_url || "");
+       setVideoUrl(post.video_url || "");
     }
   }, [post, user, navigate, id]);
 
-  const editMutation = useMutation({
+  const editArticleMutation = useMutation({
     mutationFn: () => contentApi.editArticle(id!, {
       title,
       content,
       cover: coverUrl || undefined,
     }),
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Post updated successfully!");
       queryClient.invalidateQueries({ queryKey: ['postDetail', id] });
       queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
@@ -56,14 +58,60 @@ export function EditPost() {
     }
   });
 
+  const editVideoMutation = useMutation({
+    mutationFn: () => contentApi.editVideo(id!, {
+      title,
+      video_url: videoUrl,
+      cover_url: coverUrl || undefined,
+    }),
+    onSuccess: () => {
+      toast.success("Video updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ['postDetail', id] });
+      queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      if (user) {
+         queryClient.invalidateQueries({ queryKey: ['userFeed', user.user_id] });
+      }
+      navigate(`/post/${id}`);
+    },
+    onError: () => {
+      toast.error("Failed to update video.");
+    }
+  });
+
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error("Title is required");
       return;
     }
-    editMutation.mutate();
+    
+    if (post?.content_type === 20) {
+      if (!videoUrl.trim()) {
+        toast.error("Video URL is required");
+        return;
+      }
+      try {
+         const urlObj = new URL(videoUrl.trim());
+         if (!/\.(mp4|webm|ogg|mov|mkv|m3u8)$/i.test(urlObj.pathname)) {
+            toast.error("URL must point to a valid video file (.mp4, .webm, etc.)");
+            return;
+         }
+      } catch (e) {
+         toast.error("Invalid URL format");
+         return;
+      }
+      if (!coverUrl.trim()) {
+        toast.error("Cover Image URL is required for videos");
+        return;
+      }
+      editVideoMutation.mutate();
+    } else {
+      editArticleMutation.mutate();
+    }
   };
+
+  const isPending = editArticleMutation.isPending || editVideoMutation.isPending;
 
   if (isLoading) {
     return (
@@ -90,7 +138,7 @@ export function EditPost() {
              <ArrowLeft className="h-4 w-4" />
              Back
            </button>
-           <h1 className="text-xl font-bold text-[#D7DADC] ml-2">Edit post</h1>
+           <h1 className="text-xl font-bold text-[#D7DADC] ml-2">Edit {post?.content_type === 20 ? "video" : "post"}</h1>
         </div>
       </div>
 
@@ -106,14 +154,26 @@ export function EditPost() {
             maxLength={300}
           />
           
-          <div className="flex flex-col gap-2">
-             <textarea
-               placeholder="Text (optional)"
-               value={content}
-               onChange={(e) => setContent(e.target.value)}
-               className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] min-h-[200px] focus:outline-none focus:ring-1 focus:ring-[#82959B] resize-y"
-             />
-          </div>
+          {post?.content_type === 20 ? (
+            <div className="flex flex-col gap-2">
+               <input
+                 type="text"
+                 placeholder="Video URL (e.g., https://...)"
+                 value={videoUrl}
+                 onChange={(e) => setVideoUrl(e.target.value)}
+                 className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] focus:outline-none focus:ring-1 focus:ring-[#82959B]"
+               />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+               <textarea
+                 placeholder="Text (optional)"
+                 value={content}
+                 onChange={(e) => setContent(e.target.value)}
+                 className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] min-h-[200px] focus:outline-none focus:ring-1 focus:ring-[#82959B] resize-y"
+               />
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
              <label className="text-sm text-[#82959B] font-semibold flex items-center gap-2">
@@ -136,10 +196,10 @@ export function EditPost() {
           <div className="flex justify-end mt-4 pt-4 border-t border-[#34444E]">
             <button
               type="submit"
-              disabled={editMutation.isPending || !title.trim()}
+              disabled={isPending || !title.trim() || (post?.content_type === 20 && (!videoUrl.trim() || !coverUrl.trim()))}
               className="px-6 py-2 bg-[#D7DADC] text-[#0B1416] font-bold rounded-full hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {editMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Save changes
             </button>
           </div>

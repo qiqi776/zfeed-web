@@ -60,6 +60,14 @@ export const userApi = {
     });
   },
 
+  getFollowings: async (params: {
+    user_id: string;
+    cursor?: string;
+    page_size?: number;
+  }): Promise<{ items: any[]; next_cursor: string; has_more: boolean }> => {
+    return api.post("/user/followings", params);
+  },
+
   getFollowers: async (params: {
     user_id: string;
     cursor?: string;

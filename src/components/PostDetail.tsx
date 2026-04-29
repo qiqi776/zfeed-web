@@ -224,7 +224,18 @@ export function PostDetail({ post }: { post: Post }) {
           </div>
         </div>
 
-        {post.imageUrl && (
+        {post.videoUrl && (
+          <div className="mt-3 flex w-full justify-center bg-[#0B1416] z-10 pointer-events-auto">
+            <video
+              src={post.videoUrl}
+              poster={post.imageUrl || undefined}
+              controls
+              className="max-h-[700px] object-contain w-full"
+            />
+          </div>
+        )}
+
+        {!post.videoUrl && post.imageUrl && (
           <div className="mt-3 flex w-full justify-center bg-[#0B1416]">
             <img
               src={post.imageUrl}

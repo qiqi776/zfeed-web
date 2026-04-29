@@ -23,7 +23,8 @@ export function Profile() {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState("POSTS");
-  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
+  const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
+  const [followModalType, setFollowModalType] = useState<"followers" | "followings">("followers");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const {
@@ -83,20 +84,102 @@ export function Profile() {
 
   const followMutation = useMutation({
     mutationFn: (targetId: string) => userApi.followUser(targetId),
-    onSuccess: () => {
+    onMutate: async (targetId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["userProfile", targetId] });
+      await queryClient.cancelQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+
+      const previousProfile = queryClient.getQueryData(["userProfile", targetId]);
+
+      // Optimistically update the target user's profile we are viewing
+      queryClient.setQueryData(["userProfile", targetId], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          viewer: { ...old.viewer, is_following: true },
+          counts: { ...old.counts, follower_count: old.counts.follower_count + 1 },
+        };
+      });
+
+      // Optimistically update current user's profile (followee_count + 1)
+      if (currentUser?.user_id) {
+         queryClient.setQueryData(["userProfile", currentUser.user_id], (old: any) => {
+           if (!old) return old;
+           return {
+             ...old,
+             counts: { ...old.counts, followee_count: old.counts.followee_count + 1 }
+           }
+         });
+      }
+
+      return { previousProfile };
+    },
+    onError: (err, targetId, context: any) => {
+      if (context?.previousProfile) {
+        queryClient.setQueryData(["userProfile", targetId], context.previousProfile);
+      }
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      toast.error("Failed to follow user");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      queryClient.invalidateQueries({ queryKey: ["followers"] });
+      queryClient.invalidateQueries({ queryKey: ["followings"] });
+      queryClient.invalidateQueries({ queryKey: ["follow"] });
+    },
+    onSuccess: () => {
       toast.success("Followed user!");
     },
-    onError: () => toast.error("Failed to follow user"),
   });
 
   const unfollowMutation = useMutation({
     mutationFn: (targetId: string) => userApi.unfollowUser(targetId),
-    onSuccess: () => {
+    onMutate: async (targetId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["userProfile", targetId] });
+      await queryClient.cancelQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+
+      const previousProfile = queryClient.getQueryData(["userProfile", targetId]);
+
+      // Optimistically update the target user's profile
+      queryClient.setQueryData(["userProfile", targetId], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          viewer: { ...old.viewer, is_following: false },
+          counts: { ...old.counts, follower_count: Math.max(0, old.counts.follower_count - 1) },
+        };
+      });
+
+      // Optimistically update current user's profile
+      if (currentUser?.user_id) {
+         queryClient.setQueryData(["userProfile", currentUser.user_id], (old: any) => {
+           if (!old) return old;
+           return {
+             ...old,
+             counts: { ...old.counts, followee_count: Math.max(0, old.counts.followee_count - 1) }
+           }
+         });
+      }
+
+      return { previousProfile };
+    },
+    onError: (err, targetId, context: any) => {
+      if (context?.previousProfile) {
+        queryClient.setQueryData(["userProfile", targetId], context.previousProfile);
+      }
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      toast.error("Failed to unfollow user");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      queryClient.invalidateQueries({ queryKey: ["followers"] });
+      queryClient.invalidateQueries({ queryKey: ["followings"] });
+      queryClient.invalidateQueries({ queryKey: ["follow"] });
+    },
+    onSuccess: () => {
       toast.success("Unfollowed user!");
     },
-    onError: () => toast.error("Failed to unfollow user"),
   });
 
   const handleFollowToggle = () => {
@@ -198,8 +281,7 @@ export function Profile() {
           ) : (
             <button
               onClick={handleFollowToggle}
-              disabled={followMutation.isPending || unfollowMutation.isPending}
-              className={`rounded-full px-5 py-1.5 text-sm font-bold transition active:scale-95 disabled:opacity-50 flex items-center gap-2 ${viewer.is_following ? "border border-[#D7DADC] text-[#D7DADC] hover:bg-[#34444E]" : "bg-[#D7DADC] text-[#0B1416] hover:bg-white"}`}
+              className={`rounded-full px-5 py-1.5 text-sm font-bold transition active:scale-95 flex items-center gap-2 ${viewer.is_following ? "border border-[#D7DADC] text-[#D7DADC] hover:bg-[#34444E]" : "bg-[#D7DADC] text-[#0B1416] hover:bg-white"}`}
             >
               {viewer.is_following ? "Following" : "+ Follow"}
             </button>
@@ -222,7 +304,22 @@ export function Profile() {
           </div>
           <div
             className="flex flex-col cursor-pointer transition hover:opacity-80"
-            onClick={() => setIsFollowersModalOpen(true)}
+            onClick={() => {
+              setFollowModalType("followings");
+              setIsFollowModalOpen(true);
+            }}
+          >
+            <span className="text-[#D7DADC] font-bold text-sm hover:underline">
+              {counts.followee_count}
+            </span>
+            <span className="text-[#82959B] text-xs">Following</span>
+          </div>
+          <div
+            className="flex flex-col cursor-pointer transition hover:opacity-80"
+            onClick={() => {
+              setFollowModalType("followers");
+              setIsFollowModalOpen(true);
+            }}
           >
             <span className="text-[#D7DADC] font-bold text-sm hover:underline">
               {counts.follower_count}
@@ -289,6 +386,7 @@ export function Profile() {
                   ).toLocaleDateString(),
                   isLiked: item.is_liked,
                   upvoteCount: item.like_count,
+                  contentType: item.content_type,
                 };
                 return (
                   <motion.div
@@ -325,9 +423,10 @@ export function Profile() {
       </div>
 
       <FollowersListModal
-        isOpen={isFollowersModalOpen}
-        onClose={() => setIsFollowersModalOpen(false)}
+        isOpen={isFollowModalOpen}
+        onClose={() => setIsFollowModalOpen(false)}
         userId={userId!}
+        type={followModalType}
       />
 
       <EditProfileModal

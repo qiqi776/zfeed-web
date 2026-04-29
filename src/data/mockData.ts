@@ -16,6 +16,7 @@ export interface Post {
   title: string;
   content?: string;
   imageUrl?: string;
+  videoUrl?: string;
   upvotes: string;
   comments: string;
   timeAgo: string;
@@ -23,6 +24,7 @@ export interface Post {
   isLiked?: boolean;
   isFavorited?: boolean;
   upvoteCount?: number;
+  contentType?: number;
 }
 
 export const MOckPosts: Post[] = [

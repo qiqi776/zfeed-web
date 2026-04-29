@@ -200,14 +200,33 @@ export function PostCard({ post }: PostCardProps) {
       </div>
 
       <div>
-        {/* Image Content */}
-        {post.imageUrl && (
-          <div className="mt-2 flex w-full justify-center bg-[#0B1416] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-none">
+        {/* Video Content rendering for explicit videoUrls */}
+        {post.videoUrl && (
+          <div className="mt-2 flex w-full justify-center bg-[#0B1416] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-auto">
+            <video
+              src={post.videoUrl}
+              poster={post.imageUrl || undefined}
+              controls
+              className="max-h-[500px] object-contain sm:rounded-md w-full"
+            />
+          </div>
+        )}
+
+        {/* Image Content (or Video cover in Feed) */}
+        {!post.videoUrl && post.imageUrl && (
+          <div className="mt-2 flex w-full justify-center bg-[#0B1416] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-none relative group">
             <img
               src={post.imageUrl}
               alt="Post image"
               className="max-h-[500px] object-contain sm:rounded-md pointer-events-auto"
             />
+            {post.contentType === 20 && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                <div className="w-14 h-14 bg-black/60 rounded-full flex items-center justify-center backdrop-blur-sm pointer-events-none group-hover:bg-black/80 transition shadow-lg">
+                  <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-white border-b-[10px] border-b-transparent ml-1"></div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
