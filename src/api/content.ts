@@ -25,7 +25,7 @@ export interface ContentDetail {
 export interface PublishArticleParams {
   title: string;
   content: string;
-  cover: string;
+  cover?: string;
   visibility: number;
   description?: string;
 }

@@ -348,7 +348,7 @@ export function setupMockApi() {
     if (post) {
        if (data.title) post.title = data.title;
        if (data.content) post.content = data.content;
-       if (data.cover) post.imageUrl = data.cover;
+       if (data.cover !== undefined) post.imageUrl = data.cover;
     }
     return [200, { content_id: id }];
   });
