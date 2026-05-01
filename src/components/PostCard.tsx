@@ -140,12 +140,12 @@ export function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <article className="flex cursor-pointer flex-col justify-between bg-[#1A282D] transition sm:rounded-xl sm:border sm:border-[#34444E] hover:border-[#82959B] relative h-full">
+    <article className="flex cursor-pointer flex-col justify-between bg-[#1A282D] transition sm:rounded-xl sm:border sm:border-[#34444E] hover:border-[#82959B] relative h-full hover:z-50">
       <Link to={`/post/${post.id}`} className="absolute inset-0 z-0"></Link>
       <div className="p-3 sm:px-4 sm:pt-4 z-10 pointer-events-none">
         {/* Post Header */}
         <div className="flex items-center gap-2 text-xs text-[#82959B] pointer-events-auto">
-          <div className="relative group z-20 pointer-events-auto block">
+          <div className="relative group/user z-20 pointer-events-auto block hover:z-[100]">
             <Link
               to={`/user/${post.authorId || post.author}`}
               className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20 hover:ring-2 hover:ring-[#82959B] cursor-pointer"
@@ -158,7 +158,7 @@ export function PostCard({ post }: PostCardProps) {
                 />
               ) : (
                 <img
-                  src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.author}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                  src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.author}`}
                   alt={post.author}
                   className="h-full w-full object-cover"
                 />
@@ -172,7 +172,7 @@ export function PostCard({ post }: PostCardProps) {
             </span>
             <span className="opacity-50">•</span>
             <span className="opacity-50">Posted by </span>
-            <div className="relative group z-20 pointer-events-auto block">
+            <div className="z-20 pointer-events-auto block relative group/user hover:z-[100]">
               <Link
                 to={`/user/${post.authorId || post.author}`}
                 onClick={(e) => e.stopPropagation()}

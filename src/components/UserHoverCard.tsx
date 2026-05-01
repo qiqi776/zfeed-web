@@ -6,7 +6,7 @@ export function UserHoverCard({ username }: { username: string }) {
   // The outer div uses pt-2 to bridge the gap between trigger and tooltip
   // so hover isn't lost when crossing the whitespace.
   return (
-    <div className="absolute top-full left-0 z-[999] w-64 origin-top-left pt-2 opacity-0 invisible transition-all delay-300 group-hover:visible group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+    <div className="absolute top-full left-0 z-[999] w-64 origin-top-left pt-2 opacity-0 invisible transition-all delay-300 group-hover/user:visible group-hover/user:opacity-100 pointer-events-none group-hover/user:pointer-events-auto">
       <div
         className="rounded-xl border border-[#34444E] bg-[#0B1416] p-4 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
@@ -14,7 +14,7 @@ export function UserHoverCard({ username }: { username: string }) {
         <div className="flex items-start gap-3">
           <div className="h-12 w-12 flex-shrink-0 rounded-full border border-[#34444E] bg-[#0B1416] overflow-hidden">
             <img
-              src={`https://api.dicebear.com/7.x/identicon/svg?seed=${username}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+              src={`https://api.dicebear.com/7.x/identicon/svg?seed=${username}`}
               alt={username}
               className="h-full w-full object-cover"
             />

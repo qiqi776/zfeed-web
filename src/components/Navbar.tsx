@@ -106,7 +106,7 @@ export function Navbar() {
                   className="flex items-center gap-1.5 rounded-full p-1 transition hover:bg-[#2A3C42]"
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2A3C42] overflow-hidden">
-                    <img src={user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}&backgroundColor=b6e3f4`} alt="avatar" className="h-full w-full object-cover" />
+                    <img src={user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}`} alt="avatar" className="h-full w-full object-cover" />
                   </div>
                   <ChevronDown className="hidden h-5 w-5 text-[#82959B] sm:block" />
                 </button>
@@ -116,7 +116,7 @@ export function Navbar() {
                   <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-[#34444E] bg-[#1A282D] py-2 shadow-xl z-[100] origin-top-right animate-in fade-in zoom-in-95 duration-100">
                      <div className="px-4 py-3 border-b border-[#34444E] flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-[#2A3C42] overflow-hidden">
-                           <img src={user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}&backgroundColor=b6e3f4`} alt="avatar" className="h-full w-full object-cover" />
+                           <img src={user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}`} alt="avatar" className="h-full w-full object-cover" />
                         </div>
                         <div className="flex flex-col text-left">
                            <p className="text-sm font-bold text-[#D7DADC]">{user.nickname}</p>

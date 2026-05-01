@@ -252,7 +252,7 @@ export function Profile() {
             <img
               src={
                 profile.avatar ||
-                `https://api.dicebear.com/7.x/identicon/svg?seed=${profile.nickname}&backgroundColor=b6e3f4,c0aede,d1d4f9`
+                `https://api.dicebear.com/7.x/identicon/svg?seed=${profile.nickname}`
               }
               alt="User Avatar"
               className="h-full w-full object-cover"

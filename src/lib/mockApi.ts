@@ -251,7 +251,7 @@ export function setupMockApi() {
       content_id: contentId,
       comment: c.content,
       created_at: Math.floor(Date.now() / 1000) - 3600,
-      user_id: c.author,
+      user_id: c.authorId || c.author,
       user_name: c.author,
       user_avatar:
         "https://api.dicebear.com/7.x/identicon/svg?seed=" + c.author,
@@ -277,7 +277,7 @@ export function setupMockApi() {
             comment: r.content,
             reply_to_user_id: (r as any).reply_to_user_id,
             created_at: Math.floor(Date.now() / 1000) - 1000,
-            user_id: r.author,
+            user_id: r.authorId || r.author,
             user_name: r.author,
             user_avatar:
               "https://api.dicebear.com/7.x/identicon/svg?seed=" + r.author,
@@ -371,10 +371,14 @@ export function setupMockApi() {
     const post = MOckPosts.find((p) => p.id === content_id);
 
     let mockUsername = "me_mock";
+    let mockUserId = "me_mock";
     try {
       const storage = localStorage.getItem("auth-storage");
-      if (storage)
-        mockUsername = JSON.parse(storage).state?.user?.nickname || "me_mock";
+      if (storage) {
+        const state = JSON.parse(storage).state;
+        mockUsername = state?.user?.nickname || "me_mock";
+        mockUserId = state?.user?.user_id || "me_mock";
+      }
     } catch (e) {}
 
     if (post) {
@@ -383,6 +387,7 @@ export function setupMockApi() {
       const newComment = {
         id: "new_mock_comment_" + Date.now(),
         author: mockUsername,
+        authorId: mockUserId,
         content: comment,
         upvotes: "0",
         timeAgo: "just now",

@@ -1,4 +1,4 @@
-import { useState, type FC, type MouseEvent, type SyntheticEvent } from "react";
+import { useState, useRef, useEffect, type FC, type MouseEvent as ReactMouseEvent, type SyntheticEvent } from "react";
 import {
   ArrowBigDown,
   ArrowBigUp,
@@ -63,7 +63,7 @@ export function PostDetail({ post }: { post: Post }) {
     }
   };
 
-  const handleDownvote = (e: MouseEvent) => {
+  const handleDownvote = (e: ReactMouseEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to downvote");
@@ -87,7 +87,7 @@ export function PostDetail({ post }: { post: Post }) {
     }
   };
 
-  const handleFavorite = async (e: MouseEvent) => {
+  const handleFavorite = async (e: ReactMouseEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to save posts");
@@ -162,7 +162,7 @@ export function PostDetail({ post }: { post: Post }) {
     },
   });
 
-  const handleDeletePost = (e: MouseEvent) => {
+  const handleDeletePost = (e: ReactMouseEvent) => {
     e.preventDefault();
     if (confirm("Are you sure you want to delete this post?")) {
       deletePostMutation.mutate();
@@ -174,11 +174,11 @@ export function PostDetail({ post }: { post: Post }) {
   return (
     <div className="flex w-full flex-col bg-[#0B1416] pb-20">
       {/* Post Main Body - similar to card but expanded, without hover effect */}
-      <article className="flex flex-col bg-[#1A282D] sm:rounded-xl sm:border sm:border-[#34444E] mb-4 overflow-hidden">
+      <article className="flex flex-col bg-[#1A282D] sm:rounded-xl sm:border sm:border-[#34444E] mb-4">
         <div className="p-3 sm:px-4 sm:pt-4">
           <div className="flex items-center gap-2 text-xs text-[#82959B]">
-            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20 relative group z-20 pointer-events-auto">
-              <Link to={`/user/${post.authorId || post.author}`}>
+            <div className="relative group/user z-30 pointer-events-auto hover:z-[100]">
+              <Link to={`/user/${post.authorId || post.author}`} className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20">
                 {post.subredditIcon ? (
                   <img
                     src={post.subredditIcon}
@@ -187,7 +187,7 @@ export function PostDetail({ post }: { post: Post }) {
                   />
                 ) : (
                   <img
-                    src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.author}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                    src={`https://api.dicebear.com/7.x/identicon/svg?seed=${post.author}`}
                     alt="avatar"
                     className="h-full w-full object-cover"
                   />
@@ -199,7 +199,7 @@ export function PostDetail({ post }: { post: Post }) {
               <span className="font-bold text-[#D7DADC] hover:underline cursor-pointer text-sm">
                 r/{post.subreddit}
               </span>
-              <span className="text-xs text-[#82959B] flex items-center relative group w-max block z-20 pointer-events-auto">
+              <span className="text-xs text-[#82959B] flex items-center relative group/user hover:z-[100]">
                 <Link
                   to={`/user/${post.authorId || post.author}`}
                   className="hover:text-[#D7DADC] hover:underline transition"
@@ -360,14 +360,14 @@ export function PostDetail({ post }: { post: Post }) {
             <img
               src={
                 user.avatar ||
-                `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}&backgroundColor=b6e3f4`
+                `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}`
               }
               alt="avatar"
               className="h-full w-full object-cover"
             />
           ) : (
             <img
-              src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&backgroundColor=b6e3f4"
+              src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
               alt="avatar"
               className="h-full w-full object-cover"
             />
@@ -437,6 +437,24 @@ const RealCommentThread: FC<{
   const [replyText, setReplyText] = useState("");
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const replyFormRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isReplying &&
+        replyFormRef.current &&
+        !replyFormRef.current.contains(event.target as Node)
+      ) {
+        setIsReplying(false);
+      }
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isReplying]);
 
   // local state for like
   const [isLiked, setIsLiked] = useState(comment.is_liked || false);
@@ -521,6 +539,8 @@ const RealCommentThread: FC<{
       interactionApi.deleteComment({
         comment_id: comment.comment_id,
         content_id: post_id,
+        parent_id: parent_id,
+        root_id: actualRootId,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["replies", actualRootId] });
@@ -531,14 +551,14 @@ const RealCommentThread: FC<{
   });
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 group relative hover:z-50">
       <div className="flex flex-col items-center">
-        <div className="mb-2 h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E] relative group z-20 pointer-events-auto">
-          <Link to={`/user/${comment.user_name || "unknown"}`}>
+        <div className="relative group/user z-30 pointer-events-auto mb-2 hover:z-[100]">
+          <Link to={`/user/${comment.user_name || "unknown"}`} className="block h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E]">
             <img
               src={
                 comment.user_avatar ||
-                `https://api.dicebear.com/7.x/identicon/svg?seed=${comment.user_name}&backgroundColor=b6e3f4`
+                `https://api.dicebear.com/7.x/identicon/svg?seed=${comment.user_name}`
               }
               className="h-full w-full object-cover"
             />
@@ -552,7 +572,7 @@ const RealCommentThread: FC<{
 
       <div className="flex flex-1 flex-col pb-2">
         <div className="flex items-center gap-2 mb-1">
-          <div className="relative group w-max block z-20 pointer-events-auto">
+          <div className="relative group/user w-max block z-20 pointer-events-auto hover:z-[100]">
             <Link
               to={`/user/${comment.user_name || "unknown"}`}
               className="text-xs font-bold text-[#D7DADC] hover:underline"
@@ -654,7 +674,7 @@ const RealCommentThread: FC<{
         </div>
 
         {isReplying && (
-          <form onSubmit={handleReply} className="mb-4 flex items-start gap-2">
+          <form ref={replyFormRef} onSubmit={handleReply} className="mb-4 flex items-start gap-2">
             <input
               type="text"
               value={replyText}
@@ -692,14 +712,17 @@ const RealCommentThread: FC<{
 };
 
 const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
+  const user = useAuthStore((state) => state.user);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 relative hover:z-50">
       {/* Left threading line */}
       <div className="flex flex-col items-center">
-        <div className="mb-2 h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E] relative group z-20 pointer-events-auto">
-          <Link to={`/user/${comment.author}`}>
+        <div className="relative group/user z-30 pointer-events-auto mb-2 hover:z-[100]">
+          <Link to={`/user/${comment.author}`} className="block h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E]">
             <img
-              src={`https://api.dicebear.com/7.x/identicon/svg?seed=${comment.author}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+              src={`https://api.dicebear.com/7.x/identicon/svg?seed=${comment.author}`}
               className="h-full w-full object-cover"
               alt="avatar"
             />
@@ -712,7 +735,7 @@ const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
       {/* Comment Content */}
       <div className="flex flex-1 flex-col pb-2">
         <div className="flex items-center gap-2 mb-1">
-          <div className="relative group w-max block z-20 pointer-events-auto">
+          <div className="relative group/user w-max block z-20 pointer-events-auto hover:z-[100]">
             <Link
               to={`/user/${comment.author}`}
               className="text-xs font-bold text-[#D7DADC] hover:underline"
@@ -750,6 +773,49 @@ const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
             <Share className="h-3 w-3 text-[#82959B]" />
             <span className="text-xs font-bold text-[#82959B]">Share</span>
           </button>
+          
+          {user && (user.user_id === comment.author || user.user_id === comment.authorId || user.nickname === comment.author) && (
+            showDeleteConfirm ? (
+              <div className="flex items-center gap-1 z-20 pointer-events-auto">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toast.success("Comment deleted");
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex h-7 items-center justify-center rounded-full bg-red-500/20 px-2 transition hover:bg-red-500/30 text-red-500 text-xs font-bold"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Confirm
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex h-7 items-center justify-center rounded-full bg-[#2A3C42] px-2 transition hover:bg-[#34444E] text-[#82959B] text-xs font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowDeleteConfirm(true);
+                }}
+                className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B]"
+                title="Delete Comment"
+              >
+                <Trash2 className="h-3 w-3" />
+                <span className="text-xs font-bold">Delete</span>
+              </button>
+            )
+          )}
+
           <button className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-[#2A3C42]">
             <MoreHorizontal className="h-4 w-4 text-[#82959B]" />
           </button>

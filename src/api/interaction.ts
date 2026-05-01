@@ -56,6 +56,14 @@ export interface InteractionParams {
   content_user_id?: string;
 }
 
+export interface DeleteCommentParams {
+  comment_id: string;
+  content_id: string;
+  scene?: string;
+  root_id?: string;
+  parent_id?: string;
+}
+
 export const interactionApi = {
   getComments: async (params: CommentListParams): Promise<CommentListResponse> => {
     return api.post("/interaction/comment/list", params);
@@ -85,7 +93,7 @@ export const interactionApi = {
     return api.delete("/interaction/favorite", { data: params });
   },
 
-  deleteComment: async (params: { comment_id: string; content_id: string }): Promise<void> => {
+  deleteComment: async (params: DeleteCommentParams): Promise<void> => {
     return api.delete("/interaction/comment", { data: params });
   }
 };
