@@ -19,10 +19,9 @@ import { AuthModal } from "./AuthModal";
 export function Navbar() {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAuthModalOpen, setAuthModalOpen } = useAuthStore();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -148,13 +147,13 @@ export function Navbar() {
           ) : (
             <div className="flex items-center gap-2">
               <button 
-                onClick={() => setIsAuthModalOpen(true)}
+                onClick={() => setAuthModalOpen(true)}
                 className="hidden sm:flex h-10 items-center justify-center rounded-full bg-[#2A3C42] px-4 font-bold text-[#D7DADC] transition hover:bg-[#34444E]"
               >
                 Log In
               </button>
               <button 
-                onClick={() => setIsAuthModalOpen(true)}
+                onClick={() => setAuthModalOpen(true)}
                 className="flex h-10 items-center justify-center rounded-full bg-[#D7DADC] px-4 font-bold text-[#0B1416] transition hover:bg-white"
               >
                 Sign Up
@@ -164,7 +163,7 @@ export function Navbar() {
         </div>
       </nav>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   );
 }

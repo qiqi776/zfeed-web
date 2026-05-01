@@ -23,7 +23,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const { user } = useAuthStore();
+  const { user, setAuthModalOpen } = useAuthStore();
   const queryClient = useQueryClient();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [isDownvoted, setIsDownvoted] = useState(false);
@@ -33,11 +33,11 @@ export function PostCard({ post }: PostCardProps) {
   const [isFavorited, setIsFavorited] = useState(post.isFavorited || false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const handleLike = async (e: MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error("Please login to like posts");
+      setAuthModalOpen(true);
       return;
     }
 
@@ -63,11 +63,11 @@ export function PostCard({ post }: PostCardProps) {
     }
   };
 
-  const handleDownvote = (e: MouseEvent) => {
+  const handleDownvote = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error("Please login to downvote");
+      setAuthModalOpen(true);
       return;
     }
 
@@ -88,11 +88,11 @@ export function PostCard({ post }: PostCardProps) {
     }
   };
 
-  const handleFavorite = async (e: MouseEvent) => {
+  const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error("Please login to save posts");
+      setAuthModalOpen(true);
       return;
     }
 

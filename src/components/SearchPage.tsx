@@ -106,7 +106,13 @@ export function SearchPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-[#82959B]" />
                 </div>
               ) : contentsData?.pages[0].items.length === 0 ? (
-                <div className="text-center py-10 text-[#82959B]">No posts found for "{query}"</div>
+                <div className="flex flex-col items-center justify-center py-20 text-[#82959B]">
+                  <div className="w-48 h-48 mb-6 opacity-30 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D7DADC]"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path><path d="M11 8v6"></path><path d="M8 11h6"></path></svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#D7DADC] mb-2">No Posts Found</h3>
+                  <p className="text-sm">We couldn't find any content matching "{query}"</p>
+                </div>
               ) : (
                 <>
                   {contentsData?.pages.map((page, i) =>
@@ -148,7 +154,13 @@ export function SearchPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-[#82959B]" />
                 </div>
               ) : usersData?.pages[0].items.length === 0 ? (
-                <div className="text-center py-10 text-[#82959B]">No users found for "{query}"</div>
+                <div className="flex flex-col items-center justify-center py-20 text-[#82959B]">
+                  <div className="w-48 h-48 mb-6 opacity-30 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D7DADC]"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#D7DADC] mb-2">No Users Found</h3>
+                  <p className="text-sm">We couldn't find any user matching "{query}"</p>
+                </div>
               ) : (
                 <>
                   {usersData?.pages.map((page, i) =>

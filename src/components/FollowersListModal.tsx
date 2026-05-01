@@ -133,8 +133,16 @@ export function FollowersListModal({
                 )}
               </div>
             ) : (
-              <div className="text-center py-8 text-[#82959B]">
-                {type === "followers" ? "No followers yet." : "Not following anyone yet."}
+              <div className="flex flex-col items-center justify-center py-16 text-[#82959B]">
+                 <div className="w-32 h-32 mb-6 opacity-30 flex items-center justify-center">
+                    {type === "followers" ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D7DADC]"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6"></path><path d="M22 11h-6"></path></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D7DADC]"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                    )}
+                 </div>
+                 <h3 className="text-xl font-bold text-[#D7DADC] mb-2">{type === "followers" ? "No Followers" : "Not Following Anyone"}</h3>
+                 <p className="text-sm text-center px-4">{type === "followers" ? "When someone follows this user, they'll show up here." : "When this user follows someone, they'll show up here."}</p>
               </div>
             )}
           </div>

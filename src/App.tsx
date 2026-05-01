@@ -70,25 +70,41 @@ function Feed() {
     >
       {/* Sorting Header */}
       <div className="mb-4 flex flex-col gap-3 rounded-xl px-4 py-2 sm:border sm:border-[#34444E] sm:bg-[#0B1416] sm:px-3 sm:py-3 sm:shadow-sm">
-         <div className="flex gap-4 border-b border-[#34444E] pb-2 px-1">
-            <button 
-              onClick={() => setFeedType("recommend")}
-              className={`pb-2 text-sm font-bold border-b-2 transition ${feedType === "recommend" ? "border-white text-white" : "border-transparent text-[#82959B] hover:text-[#D7DADC]"}`}
-            >
-               Recommend
-            </button>
-            <button 
-              onClick={() => {
-                if (!user) {
-                  toast.error("Please login to view following feed");
-                  return;
-                }
-                setFeedType("follow");
-              }}
-              className={`pb-2 text-sm font-bold border-b-2 transition ${feedType === "follow" ? "border-white text-white" : "border-transparent text-[#82959B] hover:text-[#D7DADC]"}`}
-            >
-               Following
-            </button>
+         <div className="flex items-center justify-between border-b border-[#34444E] pb-2 px-1">
+           <div className="flex gap-4">
+              <button 
+                onClick={() => setFeedType("recommend")}
+                className={`pb-2 text-sm font-bold border-b-2 transition ${feedType === "recommend" ? "border-white text-white" : "border-transparent text-[#82959B] hover:text-[#D7DADC]"}`}
+              >
+                 Recommend
+              </button>
+              <button 
+                onClick={() => {
+                  if (!user) {
+                    toast.error("Please login to view following feed");
+                    return;
+                  }
+                  setFeedType("follow");
+                }}
+                className={`pb-2 text-sm font-bold border-b-2 transition ${feedType === "follow" ? "border-white text-white" : "border-transparent text-[#82959B] hover:text-[#D7DADC]"}`}
+              >
+                 Following
+              </button>
+           </div>
+           
+           <div className="relative">
+             <select 
+               className="appearance-none bg-transparent text-sm font-bold text-[#82959B] hover:text-[#D7DADC] focus:outline-none cursor-pointer pr-4"
+             >
+               <option className="bg-[#1A282D]" value="top">Top</option>
+               <option className="bg-[#1A282D]" value="new">New</option>
+             </select>
+             <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2">
+               <svg className="h-3 w-3 fill-current text-[#82959B]" viewBox="0 0 20 20">
+                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+               </svg>
+             </div>
+           </div>
          </div>
       </div>
 
@@ -155,8 +171,12 @@ function Feed() {
             )}
 
             {status === 'success' && data.pages[0]?.items?.length === 0 && (
-              <div className="flex w-full items-center justify-center py-6 text-[#82959B]">
-                 No posts found.
+              <div className="flex flex-col items-center justify-center py-20 text-[#82959B]">
+                 <div className="w-48 h-48 mb-6 opacity-30 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D7DADC]"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                 </div>
+                 <h3 className="text-xl font-bold text-[#D7DADC] mb-2">It's quiet here...</h3>
+                 <p className="text-sm">No posts to display in this feed yet.</p>
               </div>
             )}
           </AnimatePresence>

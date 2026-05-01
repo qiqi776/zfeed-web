@@ -19,10 +19,12 @@ import { interactionApi, CommentItem } from "../api/interaction";
 import { contentApi } from "../api/content";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export function PostDetail({ post }: { post: Post }) {
   const [commentText, setCommentText] = useState("");
-  const { user } = useAuthStore();
+  const { user, setAuthModalOpen } = useAuthStore();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -37,7 +39,7 @@ export function PostDetail({ post }: { post: Post }) {
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!user) {
-      toast.error("Please login to like posts");
+      setAuthModalOpen(true);
       return;
     }
 
@@ -66,7 +68,7 @@ export function PostDetail({ post }: { post: Post }) {
   const handleDownvote = (e: ReactMouseEvent) => {
     e.preventDefault();
     if (!user) {
-      toast.error("Please login to downvote");
+      setAuthModalOpen(true);
       return;
     }
 
@@ -90,7 +92,7 @@ export function PostDetail({ post }: { post: Post }) {
   const handleFavorite = async (e: ReactMouseEvent) => {
     e.preventDefault();
     if (!user) {
-      toast.error("Please login to save posts");
+      setAuthModalOpen(true);
       return;
     }
 
@@ -141,7 +143,7 @@ export function PostDetail({ post }: { post: Post }) {
   ) => {
     e.preventDefault();
     if (!user) {
-      toast.error("Please login to comment");
+      setAuthModalOpen(true);
       return;
     }
     if (!commentText.trim()) return;
@@ -217,9 +219,11 @@ export function PostDetail({ post }: { post: Post }) {
               {post.title}
             </h1>
             {post.content && (
-              <p className="mt-2 text-[15px] leading-relaxed text-[#D7DADC] opacity-80 whitespace-pre-line">
-                {post.content}
-              </p>
+              <div className="mt-4 text-[15px] leading-relaxed text-[#D7DADC] opacity-90 prose prose-invert prose-p:my-2 prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-code:text-[#FF4500] prose-code:bg-[#2A3C42] prose-code:px-1 prose-code:py-0.5 prose-code:rounded-md prose-pre:bg-[#0B1416] prose-pre:border prose-pre:border-[#34444E] prose-blockquote:border-l-[#82959B] prose-blockquote:text-[#82959B] prose-headings:text-[#D7DADC] max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {post.content}
+                </ReactMarkdown>
+              </div>
             )}
           </div>
         </div>
@@ -394,6 +398,24 @@ export function PostDetail({ post }: { post: Post }) {
         </button>
       </form>
 
+      {/* Sorting Header for Comments */}
+      <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#34444E]">
+        <span className="text-sm font-bold text-[#D7DADC]">Comments</span>
+        <div className="relative">
+          <select 
+            className="appearance-none bg-transparent text-sm font-bold text-[#82959B] hover:text-[#D7DADC] focus:outline-none cursor-pointer pr-4"
+          >
+            <option className="bg-[#1A282D]" value="top">Top</option>
+            <option className="bg-[#1A282D]" value="new">New</option>
+          </select>
+          <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2">
+            <svg className="h-3 w-3 fill-current text-[#82959B]" viewBox="0 0 20 20">
+               <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
       {/* Comments List */}
       <div className="flex flex-col gap-4">
         {commentsLoading ? (
@@ -435,7 +457,7 @@ const RealCommentThread: FC<{
 }> = ({ comment, post_id, parent_id }) => {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
-  const { user } = useAuthStore();
+  const { user, setAuthModalOpen } = useAuthStore();
   const queryClient = useQueryClient();
   const replyFormRef = useRef<HTMLFormElement>(null);
 
@@ -464,7 +486,7 @@ const RealCommentThread: FC<{
 
   const handleLike = async () => {
     if (!user) {
-      toast.error("Please login to like comments");
+      setAuthModalOpen(true);
       return;
     }
 
@@ -527,7 +549,7 @@ const RealCommentThread: FC<{
   const handleReply = (e: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     e.preventDefault();
     if (!user) {
-      toast.error("Please login to reply");
+      setAuthModalOpen(true);
       return;
     }
     if (!replyText.trim()) return;
@@ -712,7 +734,7 @@ const RealCommentThread: FC<{
 };
 
 const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
-  const user = useAuthStore((state) => state.user);
+  const { user, setAuthModalOpen } = useAuthStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
