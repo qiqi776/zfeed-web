@@ -579,6 +579,75 @@ export function setupMockApi() {
     ];
   });
 
+  mock.onPost("/search/users").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const query = data.query || "";
+    if (!query.trim()) {
+       return [200, { items: [], next_cursor: "", has_more: false }];
+    }
+    
+    // Create a mock user based on the query, and include mockMe if it matches
+    const items = [];
+    if (mockMe.nickname.toLowerCase().includes(query.toLowerCase())) {
+        items.push({
+            user_id: mockMe.user_id,
+            nickname: mockMe.nickname,
+            avatar: mockMe.avatar,
+            bio: mockMe.bio,
+            is_following: followedUsers.has(mockMe.user_id)
+        });
+    }
+    
+    // Add some random matching users based on the query
+    items.push({
+        user_id: `search_user_${Date.now()}_1`,
+        nickname: `${query} fan`,
+        avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${query}1`,
+        bio: `Loves ${query}`,
+        is_following: false
+    });
+    
+    return [200, { items, next_cursor: "", has_more: false }];
+  });
+
+  mock.onPost("/search/contents").reply((config) => {
+    const data = JSON.parse(config.data || "{}");
+    const query = data.query || "";
+    if (!query.trim()) {
+       return [200, { items: [], next_cursor: "", has_more: false }];
+    }
+    
+    const items = MOckPosts.filter(
+        p => p.title.toLowerCase().includes(query.toLowerCase()) || 
+             (p.content && p.content.toLowerCase().includes(query.toLowerCase()))
+    ).map(p => ({
+        content_id: p.id,
+        content_type: p.contentType || (p.videoUrl ? 20 : 10),
+        author_id: p.authorId || p.author,
+        author_name: p.author,
+        author_avatar: p.subredditIcon || `https://api.dicebear.com/7.x/identicon/svg?seed=${p.author}`,
+        title: p.title,
+        cover_url: p.imageUrl || "",
+        published_at: Math.floor(Date.now() / 1000) - 3600 // fake time
+    }));
+
+    // If empty result, add a mock result so there's always something
+    if (items.length === 0) {
+        items.push({
+            content_id: `mock_search_${Date.now()}`,
+            content_type: 10,
+            author_id: "search_author",
+            author_name: "Search Author",
+            author_avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${query}`,
+            title: `Result for ${query}`,
+            cover_url: "",
+            published_at: Math.floor(Date.now() / 1000)
+        });
+    }
+    
+    return [200, { items, next_cursor: "", has_more: false }];
+  });
+
   // Any other routes return 200 by default or just pass through
   mock.onAny().passThrough();
 }

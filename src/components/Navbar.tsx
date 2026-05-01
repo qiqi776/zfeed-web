@@ -12,11 +12,12 @@ import {
   LogOut
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { AuthModal } from "./AuthModal";
 
 export function Navbar() {
+  const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -54,20 +55,31 @@ export function Navbar() {
 
         {/* Search Bar */}
         <div className="mx-4 flex max-w-[560px] flex-1 items-center">
-          <label className="relative w-full group">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const q = formData.get('q');
+              if (q && typeof q === 'string' && q.trim()) {
+                 navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+              }
+            }}
+            className="relative w-full group"
+          >
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
               <Search className="h-5 w-5 text-[#82959B]" />
             </div>
             <input
               type="text"
+              name="q"
               className="h-10 w-full rounded-full bg-[#2A3C42] pl-11 pr-[88px] text-sm text-[#D7DADC] placeholder:text-[#82959B] transition focus:outline-none focus:ring-1 focus:ring-[#D7DADC] hover:bg-[#34444E]"
               placeholder="Search zfeed"
             />
-            <button className="absolute right-1 top-1 bottom-1 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 text-xs font-bold text-white transition hover:opacity-90 active:scale-95">
+            <button type="button" className="absolute right-1 top-1 bottom-1 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 text-xs font-bold text-white transition hover:opacity-90 active:scale-95">
                <Sparkles className="h-3.5 w-3.5" />
                <span className="hidden sm:inline">Ask AI</span>
             </button>
-          </label>
+          </form>
         </div>
 
         {/* Right Actions */}

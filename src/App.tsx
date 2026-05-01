@@ -18,6 +18,7 @@ import { PostDetail } from "./components/PostDetail";
 import { Profile } from "./components/Profile";
 import { CreatePost } from "./components/CreatePost";
 import { EditPost } from "./components/EditPost";
+import { SearchPage } from "./components/SearchPage";
 import { MOckPosts, generateMorePosts, Post } from "./data/mockData";
 import { useAuthStore } from "./store/useAuthStore";
 import { toast } from "sonner";
@@ -246,6 +247,7 @@ export default function App() {
               <motion.div key={location.pathname} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                 <Routes location={location}>
                   <Route path="/" element={<Feed />} />
+                  <Route path="/search" element={<SearchPage />} />
                   <Route path="/post/:id" element={<PostView />} />
                   <Route path="/post/:id/edit" element={<EditPost />} />
                   <Route path="/user/:username" element={<Profile />} />
