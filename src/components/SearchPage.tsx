@@ -70,7 +70,7 @@ export function SearchPage() {
         <button
           onClick={() => setActiveTab("contents")}
           className={`px-6 py-3 font-bold transition-colors relative ${
-            activeTab === "contents" ? "text-white" : "text-[#82959B] hover:text-[#D7DADC] hover:bg-[#1A282D]"
+            activeTab === "contents" ? "text-white" : "text-[#82959B] hover:text-[#D7DADC] hover:bg-[#0B1416]"
           }`}
         >
           Posts
@@ -81,7 +81,7 @@ export function SearchPage() {
         <button
           onClick={() => setActiveTab("users")}
           className={`px-6 py-3 font-bold transition-colors relative ${
-            activeTab === "users" ? "text-white" : "text-[#82959B] hover:text-[#D7DADC] hover:bg-[#1A282D]"
+            activeTab === "users" ? "text-white" : "text-[#82959B] hover:text-[#D7DADC] hover:bg-[#0B1416]"
           }`}
         >
           People
@@ -156,7 +156,7 @@ export function SearchPage() {
                       <Link
                         key={user.user_id}
                         to={`/user/${user.user_id}`}
-                        className="flex items-center justify-between p-4 bg-[#1A282D] rounded-xl border border-[#34444E] hover:border-[#82959B] transition cursor-pointer"
+                        className="flex items-center justify-between p-4 bg-[#0B1416] rounded-xl border border-[#34444E] hover:border-[#82959B] transition cursor-pointer"
                       >
                         <div className="flex items-center gap-3">
                           <img

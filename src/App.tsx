@@ -69,7 +69,7 @@ function Feed() {
       className="flex w-full flex-col"
     >
       {/* Sorting Header */}
-      <div className="mb-4 flex flex-col gap-3 rounded-xl px-4 py-2 sm:border sm:border-[#34444E] sm:bg-[#1A282D] sm:px-3 sm:py-3 sm:shadow-sm">
+      <div className="mb-4 flex flex-col gap-3 rounded-xl px-4 py-2 sm:border sm:border-[#34444E] sm:bg-[#0B1416] sm:px-3 sm:py-3 sm:shadow-sm">
          <div className="flex gap-4 border-b border-[#34444E] pb-2 px-1">
             <button 
               onClick={() => setFeedType("recommend")}
@@ -204,7 +204,7 @@ function PostView() {
 
   if (isLoading && !mockPost) return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" /></div>;
 
-  if (!post) return <div className="text-[#D7DADC] p-8 text-center bg-[#1A282D] rounded-xl border border-[#34444E] mb-20">Post not found</div>;
+  if (!post) return <div className="text-[#D7DADC] p-8 text-center bg-[#0B1416] rounded-xl border border-[#34444E] mb-20">Post not found</div>;
 
   return (
     <motion.div 
@@ -217,7 +217,7 @@ function PostView() {
       <div className="mb-4 flex items-center">
         <button 
           onClick={() => navigate("/")} 
-          className="flex items-center gap-2 rounded-full bg-[#1A282D] border border-[#34444E] px-4 py-2 text-sm font-bold text-[#D7DADC] transition hover:bg-[#2A3C42]"
+          className="flex items-center gap-2 rounded-full bg-[#0B1416] border border-[#34444E] px-4 py-2 text-sm font-bold text-[#D7DADC] transition hover:bg-[#2A3C42]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Feed
@@ -233,7 +233,7 @@ export default function App() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-[#0B1416] text-[#D7DADC] font-sans flex flex-col">
+    <div className="min-h-screen bg-[#000000] text-[#D7DADC] font-sans flex flex-col">
       <Navbar />
       
       <div className="mx-auto flex w-full max-w-[1600px] items-start justify-start flex-1 relative">

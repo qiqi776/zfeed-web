@@ -172,9 +172,9 @@ export function PostDetail({ post }: { post: Post }) {
   const displayComments = commentsData?.comments || [];
 
   return (
-    <div className="flex w-full flex-col bg-[#0B1416] pb-20">
+    <div className="flex w-full flex-col bg-[#000000] pb-20">
       {/* Post Main Body - similar to card but expanded, without hover effect */}
-      <article className="flex flex-col bg-[#1A282D] sm:rounded-xl sm:border sm:border-[#34444E] mb-4">
+      <article className="flex flex-col bg-[#0B1416] sm:rounded-xl sm:border sm:border-[#34444E] mb-4">
         <div className="p-3 sm:px-4 sm:pt-4">
           <div className="flex items-center gap-2 text-xs text-[#82959B]">
             <div className="relative group/user z-30 pointer-events-auto hover:z-[100]">
@@ -225,7 +225,7 @@ export function PostDetail({ post }: { post: Post }) {
         </div>
 
         {post.videoUrl && (
-          <div className="mt-3 flex w-full justify-center bg-[#0B1416] z-10 pointer-events-auto">
+          <div className="mt-3 flex w-full justify-center bg-[#000000] z-10 pointer-events-auto">
             <video
               src={post.videoUrl}
               poster={post.imageUrl || undefined}
@@ -236,7 +236,7 @@ export function PostDetail({ post }: { post: Post }) {
         )}
 
         {!post.videoUrl && post.imageUrl && (
-          <div className="mt-3 flex w-full justify-center bg-[#0B1416]">
+          <div className="mt-3 flex w-full justify-center bg-[#000000]">
             <img
               src={post.imageUrl}
               alt="Post image"
@@ -353,7 +353,7 @@ export function PostDetail({ post }: { post: Post }) {
       {/* Comment Input */}
       <form
         onSubmit={handlePostComment}
-        className="mb-6 flex items-center gap-3 rounded-xl border border-[#34444E] bg-[#1A282D] p-3 shadow-sm"
+        className="mb-6 flex items-center gap-3 rounded-xl border border-[#34444E] bg-[#0B1416] p-3 shadow-sm"
       >
         <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42]">
           {user ? (
@@ -384,7 +384,7 @@ export function PostDetail({ post }: { post: Post }) {
         <button
           type="submit"
           disabled={!commentText.trim() || postCommentMutation.isPending}
-          className="rounded-full bg-[#D7DADC] px-4 py-2 font-bold text-[#1A282D] transition hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block"
+          className="rounded-full bg-[#D7DADC] px-4 py-2 font-bold text-[#0B1416] transition hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block"
         >
           {postCommentMutation.isPending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -551,7 +551,7 @@ const RealCommentThread: FC<{
   });
 
   return (
-    <div className="flex gap-2 group relative hover:z-50">
+    <div className="flex gap-2 group">
       <div className="flex flex-col items-center">
         <div className="relative group/user z-30 pointer-events-auto mb-2 hover:z-[100]">
           <Link to={`/user/${comment.user_name || "unknown"}`} className="block h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E]">
@@ -628,7 +628,7 @@ const RealCommentThread: FC<{
           {user &&
             user.user_id === comment.user_id &&
             (showDeleteConfirm ? (
-              <div className="flex items-center gap-1 z-20 pointer-events-auto">
+              <div className="flex items-center gap-1 z-20 pointer-events-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100">
                 <button
                   onClick={(e) => {
                     e.preventDefault();
@@ -660,7 +660,7 @@ const RealCommentThread: FC<{
                   e.stopPropagation();
                   setShowDeleteConfirm(true);
                 }}
-                className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B]"
+                className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B] opacity-0 group-hover:opacity-100 focus:opacity-100"
                 title="Delete Comment"
               >
                 <Trash2 className="h-3 w-3" />
@@ -687,7 +687,7 @@ const RealCommentThread: FC<{
             <button
               type="submit"
               disabled={!replyText.trim() || replyCommentMutation.isPending}
-              className="rounded-lg bg-[#D7DADC] px-3 py-1.5 text-sm font-bold text-[#1A282D] transition hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg bg-[#D7DADC] px-3 py-1.5 text-sm font-bold text-[#0B1416] transition hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {replyCommentMutation.isPending ? "..." : "Reply"}
             </button>
@@ -716,7 +716,7 @@ const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
-    <div className="flex gap-2 relative hover:z-50">
+    <div className="flex gap-2">
       {/* Left threading line */}
       <div className="flex flex-col items-center">
         <div className="relative group/user z-30 pointer-events-auto mb-2 hover:z-[100]">
@@ -776,7 +776,7 @@ const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
           
           {user && (user.user_id === comment.author || user.user_id === comment.authorId || user.nickname === comment.author) && (
             showDeleteConfirm ? (
-              <div className="flex items-center gap-1 z-20 pointer-events-auto">
+              <div className="flex items-center gap-1 z-20 pointer-events-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100">
                 <button
                   onClick={(e) => {
                     e.preventDefault();
@@ -807,7 +807,7 @@ const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
                   e.stopPropagation();
                   setShowDeleteConfirm(true);
                 }}
-                className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B]"
+                className="flex h-7 items-center gap-1.5 rounded-full px-2 transition hover:bg-red-900/30 hover:text-red-500 text-[#82959B] opacity-0 group-hover:opacity-100 focus:opacity-100"
                 title="Delete Comment"
               >
                 <Trash2 className="h-3 w-3" />

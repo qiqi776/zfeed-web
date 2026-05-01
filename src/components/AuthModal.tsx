@@ -64,7 +64,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div 
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-[#1A282D] border border-[#34444E] shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-[#0B1416] border border-[#34444E] shadow-2xl animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative p-6">
@@ -96,7 +96,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     type="text" 
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
-                    className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
+                    className="w-full rounded-xl border border-[#34444E] bg-[#000000] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
                     placeholder="Choose a nickname"
                     disabled={isLoading}
                   />
@@ -116,7 +116,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   type="text" 
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
-                  className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
+                  className="w-full rounded-xl border border-[#34444E] bg-[#000000] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
                   placeholder="Enter your mobile number"
                   disabled={isLoading}
                 />
@@ -135,7 +135,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
+                  className="w-full rounded-xl border border-[#34444E] bg-[#000000] p-3 pl-10 text-[#D7DADC] placeholder-[#82959B] transition focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
                   placeholder="Enter your password"
                   disabled={isLoading}
                 />

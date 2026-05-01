@@ -19,7 +19,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <ArrowUpRight className="h-5 w-5 opacity-60" />
               <span className="text-sm opacity-60">Popular</span>
@@ -28,7 +28,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <BarChart3 className="h-5 w-5 opacity-60" />
               <span className="text-sm opacity-60">Explore</span>
@@ -49,7 +49,7 @@ export function LeftSidebar() {
             <li key={topic}>
               <a
                 href="#"
-                className="flex items-center justify-between rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
               >
                 <span className="text-sm opacity-80">{topic}</span>
               </a>
@@ -58,7 +58,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <span className="text-sm opacity-60">See more</span>
             </a>
@@ -77,7 +77,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <span className="text-sm opacity-80">About zfeed</span>
             </a>
@@ -85,7 +85,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <span className="text-sm opacity-80">Advertise</span>
             </a>
@@ -93,7 +93,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <span className="text-sm opacity-80">Help</span>
             </a>
@@ -101,7 +101,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <span className="text-sm opacity-80">Blog</span>
             </a>
@@ -109,7 +109,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <span className="text-sm opacity-80">Careers</span>
             </a>
@@ -117,7 +117,7 @@ export function LeftSidebar() {
           <li>
             <a
               href="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#1A282D]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#D7DADC] transition hover:bg-[#0B1416]"
             >
               <span className="text-sm opacity-80">Press</span>
             </a>

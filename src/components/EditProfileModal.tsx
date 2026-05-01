@@ -96,14 +96,14 @@ export function EditProfileModal({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-[500px] overflow-hidden rounded-2xl bg-[#0B1416] border border-[#34444E] shadow-2xl flex flex-col"
+          className="relative w-full max-w-[500px] overflow-hidden rounded-2xl bg-[#000000] border border-[#34444E] shadow-2xl flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#34444E] px-6 py-4">
             <h2 className="text-xl font-bold text-[#D7DADC]">Edit profile</h2>
             <button
               onClick={onClose}
-              className="rounded-full p-2 text-[#82959B] transition hover:bg-[#1A282D] hover:text-[#D7DADC]"
+              className="rounded-full p-2 text-[#82959B] transition hover:bg-[#0B1416] hover:text-[#D7DADC]"
             >
               <X className="h-5 w-5" />
             </button>
@@ -126,10 +126,10 @@ export function EditProfileModal({
                 accept="image/png, image/jpeg, image/webp"
                 onChange={handleAvatarSelect}
               />
-              <div className="relative h-32 rounded-xl bg-gradient-to-r from-indigo-900 to-[#1A282D] mb-8 border border-[#34444E]">
+              <div className="relative h-32 rounded-xl bg-gradient-to-r from-indigo-900 to-[#0B1416] mb-8 border border-[#34444E]">
                 <div className="absolute -bottom-8 left-6 group">
                   <div
-                    className="h-24 w-24 rounded-full border-4 border-[#0B1416] overflow-hidden bg-[#1A282D] cursor-pointer relative"
+                    className="h-24 w-24 rounded-full border-4 border-[#000000] overflow-hidden bg-[#0B1416] cursor-pointer relative"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {isUploading ? (
@@ -168,7 +168,7 @@ export function EditProfileModal({
                   maxLength={30}
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  className="w-full rounded-xl border border-[#34444E] bg-[#1A282D] p-3 text-sm text-[#D7DADC] outline-none transition focus:border-[#D7DADC]"
+                  className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 text-sm text-[#D7DADC] outline-none transition focus:border-[#D7DADC]"
                   placeholder="Display name"
                 />
                 <div className="text-right text-xs text-[#82959B]">
@@ -187,7 +187,7 @@ export function EditProfileModal({
                   maxLength={200}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full rounded-xl border border-[#34444E] bg-[#1A282D] p-3 text-sm text-[#D7DADC] outline-none transition focus:border-[#D7DADC] min-h-[100px] resize-none"
+                  className="w-full rounded-xl border border-[#34444E] bg-[#0B1416] p-3 text-sm text-[#D7DADC] outline-none transition focus:border-[#D7DADC] min-h-[100px] resize-none"
                   placeholder="About you"
                 />
                 <div className="text-right text-xs text-[#82959B]">
@@ -200,14 +200,14 @@ export function EditProfileModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 font-bold text-[#D7DADC] hover:bg-[#1A282D] rounded-full transition text-sm"
+                className="px-5 py-2 font-bold text-[#D7DADC] hover:bg-[#0B1416] rounded-full transition text-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isUploading || updateProfileMutation.isPending}
-                className="px-5 py-2 font-bold bg-[#D7DADC] text-[#0B1416] hover:bg-white rounded-full transition disabled:opacity-50 text-sm flex items-center justify-center min-w-[80px]"
+                className="px-5 py-2 font-bold bg-[#D7DADC] text-[#000000] hover:bg-white rounded-full transition disabled:opacity-50 text-sm flex items-center justify-center min-w-[80px]"
               >
                 {updateProfileMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

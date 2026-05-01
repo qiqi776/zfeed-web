@@ -8,11 +8,11 @@ export function UserHoverCard({ username }: { username: string }) {
   return (
     <div className="absolute top-full left-0 z-[999] w-64 origin-top-left pt-2 opacity-0 invisible transition-all delay-300 group-hover/user:visible group-hover/user:opacity-100 pointer-events-none group-hover/user:pointer-events-auto">
       <div
-        className="rounded-xl border border-[#34444E] bg-[#0B1416] p-4 shadow-2xl relative"
+        className="rounded-xl border border-[#34444E] bg-[#000000] p-4 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
-          <div className="h-12 w-12 flex-shrink-0 rounded-full border border-[#34444E] bg-[#0B1416] overflow-hidden">
+          <div className="h-12 w-12 flex-shrink-0 rounded-full border border-[#34444E] bg-[#000000] overflow-hidden">
             <img
               src={`https://api.dicebear.com/7.x/identicon/svg?seed=${username}`}
               alt={username}
@@ -48,7 +48,7 @@ export function UserHoverCard({ username }: { username: string }) {
         <div className="mt-4 flex gap-2">
           <Link
             to={`/user/${username}`}
-            className="flex-1 rounded-full bg-[#D7DADC] py-1.5 text-center text-sm font-bold text-[#0B1416] transition hover:bg-white"
+            className="flex-1 rounded-full bg-[#D7DADC] py-1.5 text-center text-sm font-bold text-[#000000] transition hover:bg-white"
           >
             View Profile
           </Link>

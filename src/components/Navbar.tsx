@@ -42,7 +42,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-[#34444E] bg-[#1A282D] px-4 md:px-5 flex-shrink-0">
+      <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-[#34444E] bg-[#0B1416] px-4 md:px-5 flex-shrink-0">
         {/* Brand & Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF4500]">
@@ -113,7 +113,7 @@ export function Navbar() {
 
                 {/* Expanded Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-[#34444E] bg-[#1A282D] py-2 shadow-xl z-[100] origin-top-right animate-in fade-in zoom-in-95 duration-100">
+                  <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-[#34444E] bg-[#0B1416] py-2 shadow-xl z-[100] origin-top-right animate-in fade-in zoom-in-95 duration-100">
                      <div className="px-4 py-3 border-b border-[#34444E] flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-[#2A3C42] overflow-hidden">
                            <img src={user.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${user.nickname}`} alt="avatar" className="h-full w-full object-cover" />
@@ -155,7 +155,7 @@ export function Navbar() {
               </button>
               <button 
                 onClick={() => setIsAuthModalOpen(true)}
-                className="flex h-10 items-center justify-center rounded-full bg-[#D7DADC] px-4 font-bold text-[#1A282D] transition hover:bg-white"
+                className="flex h-10 items-center justify-center rounded-full bg-[#D7DADC] px-4 font-bold text-[#0B1416] transition hover:bg-white"
               >
                 Sign Up
               </button>

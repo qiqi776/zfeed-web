@@ -237,7 +237,7 @@ export function Profile() {
       <div className="mb-4 flex items-center">
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 rounded-full bg-[#1A282D] border border-[#34444E] px-4 py-2 text-sm font-bold text-[#D7DADC] transition hover:bg-[#2A3C42]"
+          className="flex items-center gap-2 rounded-full bg-[#0B1416] border border-[#34444E] px-4 py-2 text-sm font-bold text-[#D7DADC] transition hover:bg-[#2A3C42]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Feed
@@ -248,7 +248,7 @@ export function Profile() {
       <div className="mb-4 flex flex-col gap-4 px-4 sm:px-0">
         <div className="flex items-center gap-4">
           {/* Avatar */}
-          <div className="h-20 w-20 overflow-hidden rounded-full bg-[#1A282D] sm:h-24 sm:w-24 ring-4 ring-[#1A282D]">
+          <div className="h-20 w-20 overflow-hidden rounded-full bg-[#0B1416] sm:h-24 sm:w-24 ring-4 ring-[#0B1416]">
             <img
               src={
                 profile.avatar ||
@@ -281,7 +281,7 @@ export function Profile() {
           ) : (
             <button
               onClick={handleFollowToggle}
-              className={`rounded-full px-5 py-1.5 text-sm font-bold transition active:scale-95 flex items-center gap-2 ${viewer.is_following ? "border border-[#D7DADC] text-[#D7DADC] hover:bg-[#34444E]" : "bg-[#D7DADC] text-[#0B1416] hover:bg-white"}`}
+              className={`rounded-full px-5 py-1.5 text-sm font-bold transition active:scale-95 flex items-center gap-2 ${viewer.is_following ? "border border-[#D7DADC] text-[#D7DADC] hover:bg-[#34444E]" : "bg-[#D7DADC] text-[#000000] hover:bg-white"}`}
             >
               {viewer.is_following ? "Following" : "+ Follow"}
             </button>
@@ -344,7 +344,7 @@ export function Profile() {
             className={`whitespace-nowrap px-1 py-3 font-bold text-sm transition relative ${
               activeTab === tab
                 ? "text-[#D7DADC]"
-                : "text-[#82959B] hover:bg-[#1A282D]/50 hover:text-[#D7DADC]"
+                : "text-[#82959B] hover:bg-[#0B1416]/50 hover:text-[#D7DADC]"
             }`}
           >
             {tab}
@@ -405,7 +405,7 @@ export function Profile() {
             )}
           </AnimatePresence>
         ) : (
-          <div className="flex flex-col items-center justify-center p-12 text-[#82959B] bg-[#1A282D] rounded-xl border border-[#34444E]">
+          <div className="flex flex-col items-center justify-center p-12 text-[#82959B] bg-[#0B1416] rounded-xl border border-[#34444E]">
             <Grid className="h-12 w-12 opacity-20 mb-3" />
             <p className="text-sm font-bold">Nothing to see here yet</p>
             <p className="text-xs opacity-70">

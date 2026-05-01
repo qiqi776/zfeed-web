@@ -2,7 +2,7 @@ export function RightSidebar() {
   return (
     <aside className="sticky top-14 hidden h-[calc(100vh-56px)] w-[316px] flex-col overflow-hidden hover:overflow-y-auto thin-scrollbar gap-4 py-6 pr-4 lg:flex flex-shrink-0 z-10 transition-all">
       {/* Premium Banner */}
-      <div className="rounded-xl border border-[#34444E] bg-[#1A282D] p-3 shadow-sm">
+      <div className="rounded-xl border border-[#34444E] bg-[#0B1416] p-3 shadow-sm">
         <div className="flex items-start gap-3">
           <div className="mt-1 h-6 w-6 text-[#FF4500]">
             <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" className="fill-current">
@@ -20,7 +20,7 @@ export function RightSidebar() {
       </div>
 
       {/* Community Directory */}
-      <div className="rounded-xl border border-[#34444E] bg-[#1A282D] shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-[#34444E] bg-[#0B1416] shadow-sm overflow-hidden">
         <div className="bg-[#2A3C42] px-4 py-3">
           <h3 className="text-sm font-bold text-[#D7DADC]">Popular Communities</h3>
         </div>

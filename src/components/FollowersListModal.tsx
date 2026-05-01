@@ -58,14 +58,14 @@ export function FollowersListModal({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#0B1416] shadow-2xl border border-[#34444E] flex flex-col max-h-[80vh]"
+          className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#000000] shadow-2xl border border-[#34444E] flex flex-col max-h-[80vh]"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#34444E] px-6 py-4">
             <h2 className="text-xl font-bold text-[#D7DADC]">{type === "followers" ? "Followers" : "Following"}</h2>
             <button
               onClick={onClose}
-              className="rounded-full p-2 text-[#82959B] transition hover:bg-[#1A282D] hover:text-[#D7DADC]"
+              className="rounded-full p-2 text-[#82959B] transition hover:bg-[#0B1416] hover:text-[#D7DADC]"
             >
               <X className="h-5 w-5" />
             </button>
@@ -84,12 +84,12 @@ export function FollowersListModal({
                     {page.items.map((user) => (
                       <div
                         key={user.user_id}
-                        className="flex items-center gap-3 bg-[#1A282D] p-3 rounded-xl border border-[#34444E]"
+                        className="flex items-center gap-3 bg-[#0B1416] p-3 rounded-xl border border-[#34444E]"
                       >
                         <Link
                           to={`/user/${user.user_id}`}
                           onClick={onClose}
-                          className="h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-[#0B1416]"
+                          className="h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-[#000000]"
                         >
                           <img
                             src={
@@ -122,7 +122,7 @@ export function FollowersListModal({
                   <button
                     onClick={() => fetchNextPage()}
                     disabled={isFetchingNextPage}
-                    className="w-full py-3 rounded-xl border border-[#34444E] bg-[#1A282D] font-bold text-sm text-[#D7DADC] hover:bg-[#2A3C42] transition"
+                    className="w-full py-3 rounded-xl border border-[#34444E] bg-[#0B1416] font-bold text-sm text-[#D7DADC] hover:bg-[#2A3C42] transition"
                   >
                     {isFetchingNextPage ? (
                       <Loader2 className="h-4 w-4 animate-spin mx-auto" />

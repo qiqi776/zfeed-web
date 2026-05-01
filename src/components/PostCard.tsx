@@ -140,7 +140,7 @@ export function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <article className="flex cursor-pointer flex-col justify-between bg-[#1A282D] transition sm:rounded-xl sm:border sm:border-[#34444E] hover:border-[#82959B] relative h-full hover:z-50">
+    <article className="flex cursor-pointer flex-col justify-between bg-[#0B1416] transition sm:rounded-xl sm:border sm:border-[#34444E] hover:border-[#82959B] relative h-full hover:z-50">
       <Link to={`/post/${post.id}`} className="absolute inset-0 z-0"></Link>
       <div className="p-3 sm:px-4 sm:pt-4 z-10 pointer-events-none">
         {/* Post Header */}
@@ -202,7 +202,7 @@ export function PostCard({ post }: PostCardProps) {
       <div>
         {/* Video Content rendering for explicit videoUrls */}
         {post.videoUrl && (
-          <div className="mt-2 flex w-full justify-center bg-[#0B1416] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-auto">
+          <div className="mt-2 flex w-full justify-center bg-[#000000] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-auto">
             <video
               src={post.videoUrl}
               poster={post.imageUrl || undefined}
@@ -214,7 +214,7 @@ export function PostCard({ post }: PostCardProps) {
 
         {/* Image Content (or Video cover in Feed) */}
         {!post.videoUrl && post.imageUrl && (
-          <div className="mt-2 flex w-full justify-center bg-[#0B1416] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-none relative group">
+          <div className="mt-2 flex w-full justify-center bg-[#000000] overflow-hidden sm:rounded-md max-h-[500px] z-10 pointer-events-none relative group">
             <img
               src={post.imageUrl}
               alt="Post image"

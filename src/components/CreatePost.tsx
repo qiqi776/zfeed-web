@@ -108,7 +108,7 @@ export function CreatePost() {
         <div className="flex items-center gap-2">
            <button 
              onClick={() => navigate(-1)} 
-             className="flex items-center gap-2 rounded-full bg-[#1A282D] border border-[#34444E] px-4 py-2 text-sm font-bold text-[#D7DADC] transition hover:bg-[#2A3C42]"
+             className="flex items-center gap-2 rounded-full bg-[#0B1416] border border-[#34444E] px-4 py-2 text-sm font-bold text-[#D7DADC] transition hover:bg-[#2A3C42]"
            >
              <ArrowLeft className="h-4 w-4" />
              Back
@@ -117,7 +117,7 @@ export function CreatePost() {
         </div>
       </div>
 
-      <div className="bg-[#1A282D] rounded-xl border border-[#34444E] overflow-hidden">
+      <div className="bg-[#0B1416] rounded-xl border border-[#34444E] overflow-hidden">
         {/* Post Type Selector */}
         <div className="flex border-b border-[#34444E]">
           <button
@@ -151,7 +151,7 @@ export function CreatePost() {
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] font-bold text-lg focus:outline-none focus:ring-1 focus:ring-[#82959B]"
+            className="w-full bg-[#000000] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] font-bold text-lg focus:outline-none focus:ring-1 focus:ring-[#82959B]"
             maxLength={300}
           />
           
@@ -168,7 +168,7 @@ export function CreatePost() {
                   placeholder="Text (optional)"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] min-h-[200px] focus:outline-none focus:ring-1 focus:ring-[#82959B] resize-y"
+                  className="w-full bg-[#000000] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] min-h-[200px] focus:outline-none focus:ring-1 focus:ring-[#82959B] resize-y"
                 />
               </motion.div>
             ) : (
@@ -184,7 +184,7 @@ export function CreatePost() {
                   placeholder="Video URL (e.g., https://...)"
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
-                  className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] focus:outline-none focus:ring-1 focus:ring-[#82959B]"
+                  className="w-full bg-[#000000] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] focus:outline-none focus:ring-1 focus:ring-[#82959B]"
                 />
               </motion.div>
             )}
@@ -199,10 +199,10 @@ export function CreatePost() {
                placeholder="https://..."
                value={coverUrl}
                onChange={(e) => setCoverUrl(e.target.value)}
-               className="w-full bg-[#0B1416] border border-[#34444E] rounded-md px-4 py-2 text-[#D7DADC] text-sm focus:outline-none focus:ring-1 focus:ring-[#82959B]"
+               className="w-full bg-[#000000] border border-[#34444E] rounded-md px-4 py-2 text-[#D7DADC] text-sm focus:outline-none focus:ring-1 focus:ring-[#82959B]"
              />
              {coverUrl && (
-                <div className="mt-2 rounded-md overflow-hidden bg-[#0B1416] border border-[#34444E] max-w-sm max-h-48 relative">
+                <div className="mt-2 rounded-md overflow-hidden bg-[#000000] border border-[#34444E] max-w-sm max-h-48 relative">
                    <img src={coverUrl} alt="Cover preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
                 </div>
              )}
@@ -212,7 +212,7 @@ export function CreatePost() {
             <button
               type="submit"
               disabled={isPending || !title.trim() || (postType === "video" && (!videoUrl.trim() || !coverUrl.trim()))}
-              className="px-6 py-2 bg-[#D7DADC] text-[#0B1416] font-bold rounded-full hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2 bg-[#D7DADC] text-[#000000] font-bold rounded-full hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Publish
