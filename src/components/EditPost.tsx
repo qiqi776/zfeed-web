@@ -19,7 +19,7 @@ export function EditPost() {
   const [videoUrl, setVideoUrl] = useState("");
 
   const { data: post, isLoading } = useQuery({
-    queryKey: ['postDetail', id],
+    queryKey: ['content', id],
     queryFn: () => contentApi.getDetail(id!),
     enabled: !!id,
   });
@@ -45,8 +45,7 @@ export function EditPost() {
     }),
     onSuccess: () => {
       toast.success("Post updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ['postDetail', id] });
-      queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['content', id] });
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       if (user) {
          queryClient.invalidateQueries({ queryKey: ['userFeed', user.user_id] });
@@ -66,8 +65,7 @@ export function EditPost() {
     }),
     onSuccess: () => {
       toast.success("Video updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ['postDetail', id] });
-      queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['content', id] });
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       if (user) {
          queryClient.invalidateQueries({ queryKey: ['userFeed', user.user_id] });
@@ -151,7 +149,7 @@ export function EditPost() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full bg-[#000000] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] font-bold text-lg focus:outline-none focus:ring-1 focus:ring-[#82959B]"
-            maxLength={300}
+            maxLength={100}
           />
           
           {post?.content_type === 20 ? (

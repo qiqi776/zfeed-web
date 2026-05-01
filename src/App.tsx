@@ -19,7 +19,8 @@ import { Profile } from "./components/Profile";
 import { CreatePost } from "./components/CreatePost";
 import { EditPost } from "./components/EditPost";
 import { SearchPage } from "./components/SearchPage";
-import { MOckPosts, generateMorePosts, Post } from "./data/mockData";
+import { MOckPosts, Post } from "./data/mockData";
+import { isMockEnabled } from "./lib/runtimeFlags";
 import { useAuthStore } from "./store/useAuthStore";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ import { toast } from "sonner";
 function Feed() {
   const [feedType, setFeedType] = useState<"recommend" | "follow">("recommend");
   const { user } = useAuthStore();
+  const showMockRecommendPosts = isMockEnabled && feedType === "recommend";
 
   const {
     data,
@@ -121,7 +123,7 @@ function Feed() {
         ) : (
           <AnimatePresence>
             {/* Display static mock posts first only for recommend for now */}
-            {feedType === 'recommend' && MOckPosts.map((post) => (
+            {showMockRecommendPosts && MOckPosts.map((post) => (
               <motion.div
                 layout
                 key={post.id}
@@ -197,7 +199,9 @@ function PostView() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  const mockPost = MOckPosts.find((p) => p.id === id);
+  const mockPost = isMockEnabled
+    ? MOckPosts.find((p) => p.id === id)
+    : undefined;
 
   const { data: serverPost, isLoading, error } = useQuery({
     queryKey: ['content', id],
@@ -214,12 +218,14 @@ function PostView() {
     title: serverPost.title,
     content: serverPost.article_content || serverPost.description,
     imageUrl: serverPost.cover_url,
+    videoUrl: serverPost.video_url || undefined,
     upvotes: serverPost.like_count.toString(),
     comments: serverPost.comment_count?.toString() || "0",
     timeAgo: new Date(serverPost.published_at * 1000).toLocaleDateString(),
     isLiked: serverPost.is_liked,
     isFavorited: serverPost.is_favorited,
     upvoteCount: serverPost.like_count,
+    contentType: serverPost.content_type,
   } : null);
 
   if (isLoading && !mockPost) return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin text-[#D7DADC]" /></div>;
@@ -284,4 +290,3 @@ export default function App() {
     </div>
   );
 }
-

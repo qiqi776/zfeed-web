@@ -1,4 +1,5 @@
 import { api } from "../lib/axios";
+import { normalizeId } from "../lib/ids";
 
 export interface SearchUserItem {
   user_id: string;
@@ -43,11 +44,60 @@ export interface SearchContentsResponse {
   has_more: boolean;
 }
 
+interface RawSearchUserItem extends Omit<SearchUserItem, "user_id"> {
+  user_id: string | number;
+}
+
+interface RawSearchContentItem
+  extends Omit<SearchContentItem, "content_id" | "author_id"> {
+  content_id: string | number;
+  author_id: string | number;
+}
+
+interface RawSearchUsersResponse {
+  items: RawSearchUserItem[];
+  next_cursor: string | number;
+  has_more: boolean;
+}
+
+interface RawSearchContentsResponse {
+  items: RawSearchContentItem[];
+  next_cursor: string | number;
+  has_more: boolean;
+}
+
 export const searchApi = {
   searchUsers: async (params: SearchUsersParams): Promise<SearchUsersResponse> => {
-    return api.post("/search/users", params);
+    const response = (await api.post("/search/users", {
+      ...params,
+      cursor:
+        params.cursor === undefined || params.cursor === "" ? undefined : Number(params.cursor),
+    })) as RawSearchUsersResponse;
+
+    return {
+      items: response.items.map((item) => ({
+        ...item,
+        user_id: normalizeId(item.user_id),
+      })),
+      next_cursor: normalizeId(response.next_cursor),
+      has_more: response.has_more,
+    };
   },
   searchContents: async (params: SearchContentsParams): Promise<SearchContentsResponse> => {
-    return api.post("/search/contents", params);
+    const response = (await api.post("/search/contents", {
+      ...params,
+      cursor:
+        params.cursor === undefined || params.cursor === "" ? undefined : Number(params.cursor),
+    })) as RawSearchContentsResponse;
+
+    return {
+      items: response.items.map((item) => ({
+        ...item,
+        content_id: normalizeId(item.content_id),
+        author_id: normalizeId(item.author_id),
+      })),
+      next_cursor: normalizeId(response.next_cursor),
+      has_more: response.has_more,
+    };
   },
 };

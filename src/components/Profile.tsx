@@ -11,7 +11,8 @@ import {
 } from "@tanstack/react-query";
 import { userApi } from "../api/user";
 import { feedApi } from "../api/feed";
-import { Post, MOckPosts } from "../data/mockData";
+import { Post } from "../data/mockData";
+import { normalizeId } from "../lib/ids";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
 import { FollowersListModal } from "./FollowersListModal";
@@ -22,6 +23,9 @@ export function Profile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuthStore();
+  const currentUserId = currentUser?.user_id
+    ? normalizeId(currentUser.user_id)
+    : "";
   const [activeTab, setActiveTab] = useState("POSTS");
   const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
   const [followModalType, setFollowModalType] = useState<"followers" | "followings">("followers");
@@ -86,7 +90,7 @@ export function Profile() {
     mutationFn: (targetId: string) => userApi.followUser(targetId),
     onMutate: async (targetId: string) => {
       await queryClient.cancelQueries({ queryKey: ["userProfile", targetId] });
-      await queryClient.cancelQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      await queryClient.cancelQueries({ queryKey: ["userProfile", currentUserId] });
 
       const previousProfile = queryClient.getQueryData(["userProfile", targetId]);
 
@@ -101,8 +105,8 @@ export function Profile() {
       });
 
       // Optimistically update current user's profile (followee_count + 1)
-      if (currentUser?.user_id) {
-         queryClient.setQueryData(["userProfile", currentUser.user_id], (old: any) => {
+      if (currentUserId) {
+         queryClient.setQueryData(["userProfile", currentUserId], (old: any) => {
            if (!old) return old;
            return {
              ...old,
@@ -117,12 +121,12 @@ export function Profile() {
       if (context?.previousProfile) {
         queryClient.setQueryData(["userProfile", targetId], context.previousProfile);
       }
-      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUserId] });
       toast.error("Failed to follow user");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUserId] });
       queryClient.invalidateQueries({ queryKey: ["followers"] });
       queryClient.invalidateQueries({ queryKey: ["followings"] });
       queryClient.invalidateQueries({ queryKey: ["follow"] });
@@ -136,7 +140,7 @@ export function Profile() {
     mutationFn: (targetId: string) => userApi.unfollowUser(targetId),
     onMutate: async (targetId: string) => {
       await queryClient.cancelQueries({ queryKey: ["userProfile", targetId] });
-      await queryClient.cancelQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      await queryClient.cancelQueries({ queryKey: ["userProfile", currentUserId] });
 
       const previousProfile = queryClient.getQueryData(["userProfile", targetId]);
 
@@ -151,8 +155,8 @@ export function Profile() {
       });
 
       // Optimistically update current user's profile
-      if (currentUser?.user_id) {
-         queryClient.setQueryData(["userProfile", currentUser.user_id], (old: any) => {
+      if (currentUserId) {
+         queryClient.setQueryData(["userProfile", currentUserId], (old: any) => {
            if (!old) return old;
            return {
              ...old,
@@ -167,12 +171,12 @@ export function Profile() {
       if (context?.previousProfile) {
         queryClient.setQueryData(["userProfile", targetId], context.previousProfile);
       }
-      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUserId] });
       toast.error("Failed to unfollow user");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUser?.user_id] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", currentUserId] });
       queryClient.invalidateQueries({ queryKey: ["followers"] });
       queryClient.invalidateQueries({ queryKey: ["followings"] });
       queryClient.invalidateQueries({ queryKey: ["follow"] });
@@ -225,7 +229,8 @@ export function Profile() {
   }
 
   const { user_profile: profile, counts, viewer } = profileResponse;
-  const isSelf = currentUser?.user_id === profile.user_id;
+  const profileUserId = normalizeId(profile.user_id);
+  const isSelf = currentUserId !== "" && currentUserId === profileUserId;
 
   return (
     <motion.div
@@ -264,7 +269,7 @@ export function Profile() {
               {profile.nickname}
             </h1>
             <p className="text-sm text-[#82959B]">
-              u/{profile.user_id.substring(0, 8)}
+              u/{profileUserId.slice(0, 8)}
             </p>
           </div>
 

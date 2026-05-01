@@ -18,6 +18,7 @@ export function FollowersListModal({
   userId,
   type = "followers",
 }: FollowersListModalProps) {
+  const supportsListing = type === "followers";
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
       queryKey: [type, userId],
@@ -36,8 +37,10 @@ export function FollowersListModal({
       initialPageParam: "",
       getNextPageParam: (lastPage) =>
         lastPage.has_more ? lastPage.next_cursor : undefined,
-      enabled: isOpen && !!userId,
+      enabled: isOpen && !!userId && supportsListing,
     });
+  const pages = data?.pages ?? [];
+  const firstPageItems = pages[0]?.items ?? [];
 
   if (!isOpen) return null;
 
@@ -73,13 +76,21 @@ export function FollowersListModal({
 
           {/* List */}
           <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
-            {status === "pending" ? (
+            {!supportsListing ? (
+              <div className="flex flex-col items-center justify-center py-16 text-[#82959B]">
+                <div className="w-32 h-32 mb-6 opacity-30 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-[#D7DADC]"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                </div>
+                <h3 className="text-xl font-bold text-[#D7DADC] mb-2">Following List Unavailable</h3>
+                <p className="text-sm text-center px-4">The current backend does not expose a followings list API yet.</p>
+              </div>
+            ) : status === "pending" ? (
               <div className="flex justify-center p-8">
                 <Loader2 className="h-8 w-8 animate-spin text-[#82959B]" />
               </div>
-            ) : data?.pages[0]?.items?.length > 0 ? (
+            ) : firstPageItems.length > 0 ? (
               <div className="flex flex-col gap-4">
-                {data.pages.map((page, i) => (
+                {pages.map((page, i) => (
                   <div key={i} className="flex flex-col gap-4">
                     {page.items.map((user) => (
                       <div

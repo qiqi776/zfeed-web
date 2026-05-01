@@ -1,7 +1,15 @@
 import { Cake, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export function UserHoverCard({ username }: { username: string }) {
+export function UserHoverCard({
+  username,
+  userId,
+}: {
+  username: string;
+  userId?: string;
+}) {
+  const profileTarget = userId || username;
+
   // Use z-[100] to ensure it pops up above all other elements
   // The outer div uses pt-2 to bridge the gap between trigger and tooltip
   // so hover isn't lost when crossing the whitespace.
@@ -21,7 +29,7 @@ export function UserHoverCard({ username }: { username: string }) {
           </div>
           <div className="flex flex-col">
             <Link
-              to={`/user/${username}`}
+              to={`/user/${profileTarget}`}
               className="font-bold text-[#D7DADC] text-base hover:underline"
             >
               u/{username}
@@ -47,7 +55,7 @@ export function UserHoverCard({ username }: { username: string }) {
 
         <div className="mt-4 flex gap-2">
           <Link
-            to={`/user/${username}`}
+            to={`/user/${profileTarget}`}
             className="flex-1 rounded-full bg-[#D7DADC] py-1.5 text-center text-sm font-bold text-[#000000] transition hover:bg-white"
           >
             View Profile

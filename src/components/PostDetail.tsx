@@ -17,6 +17,8 @@ import { UserHoverCard } from "./UserHoverCard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { interactionApi, CommentItem } from "../api/interaction";
 import { contentApi } from "../api/content";
+import { getInteractionSceneFromContentType } from "../lib/contentMeta";
+import { isMockEnabled } from "../lib/runtimeFlags";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -27,6 +29,8 @@ export function PostDetail({ post }: { post: Post }) {
   const { user, setAuthModalOpen } = useAuthStore();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const postScene = getInteractionSceneFromContentType(post.contentType);
+  const postAuthorId = post.authorId || post.author;
 
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [isDownvoted, setIsDownvoted] = useState(false);
@@ -47,7 +51,7 @@ export function PostDetail({ post }: { post: Post }) {
       if (isLiked) {
         setIsLiked(false);
         setUpvoteCount((prev) => prev - 1);
-        await interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" });
+        await interactionApi.unlike({ content_id: post.id, scene: postScene });
       } else {
         setIsLiked(true);
         if (isDownvoted) {
@@ -56,7 +60,11 @@ export function PostDetail({ post }: { post: Post }) {
         } else {
           setUpvoteCount((prev) => prev + 1);
         }
-        await interactionApi.like({ content_id: post.id, scene: "ARTICLE" });
+        await interactionApi.like({
+          content_id: post.id,
+          content_user_id: postAuthorId,
+          scene: postScene,
+        });
       }
     } catch (err) {
       setIsLiked(!isLiked);
@@ -81,7 +89,7 @@ export function PostDetail({ post }: { post: Post }) {
         setIsLiked(false);
         setUpvoteCount((prev) => prev - 2);
         interactionApi
-          .unlike({ content_id: post.id, scene: "ARTICLE" })
+          .unlike({ content_id: post.id, scene: postScene })
           .catch(() => {});
       } else {
         setUpvoteCount((prev) => prev - 1);
@@ -101,14 +109,15 @@ export function PostDetail({ post }: { post: Post }) {
         setIsFavorited(false);
         await interactionApi.unfavorite({
           content_id: post.id,
-          scene: "ARTICLE",
+          scene: postScene,
         });
         toast.success("Post removed from favorites");
       } else {
         setIsFavorited(true);
         await interactionApi.favorite({
           content_id: post.id,
-          scene: "ARTICLE",
+          content_user_id: postAuthorId,
+          scene: postScene,
         });
         toast.success("Post saved to favorites");
       }
@@ -121,13 +130,22 @@ export function PostDetail({ post }: { post: Post }) {
   const { data: commentsData, isLoading: commentsLoading } = useQuery({
     queryKey: ["comments", post.id],
     queryFn: () =>
-      interactionApi.getComments({ content_id: post.id, page_size: 50 }),
+      interactionApi.getComments({
+        content_id: post.id,
+        scene: postScene,
+        page_size: 50,
+      }),
     enabled: !!post.id,
   });
 
   const postCommentMutation = useMutation({
     mutationFn: (text: string) =>
-      interactionApi.postComment({ content_id: post.id, comment: text }),
+      interactionApi.postComment({
+        content_id: post.id,
+        content_user_id: postAuthorId,
+        scene: postScene,
+        comment: text,
+      }),
     onSuccess: () => {
       setCommentText("");
       queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
@@ -153,7 +171,7 @@ export function PostDetail({ post }: { post: Post }) {
   const deletePostMutation = useMutation({
     mutationFn: () => contentApi.deletePost(post.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommendFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
       queryClient.invalidateQueries({ queryKey: ["userFeed"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       toast.success("Post deleted");
@@ -180,7 +198,7 @@ export function PostDetail({ post }: { post: Post }) {
         <div className="p-3 sm:px-4 sm:pt-4">
           <div className="flex items-center gap-2 text-xs text-[#82959B]">
             <div className="relative group/user z-30 pointer-events-auto hover:z-[100]">
-              <Link to={`/user/${post.authorId || post.author}`} className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20">
+              <Link to={`/user/${postAuthorId}`} className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-500 bg-opacity-20">
                 {post.subredditIcon ? (
                   <img
                     src={post.subredditIcon}
@@ -195,7 +213,7 @@ export function PostDetail({ post }: { post: Post }) {
                   />
                 )}
               </Link>
-              <UserHoverCard username={post.author} />
+              <UserHoverCard username={post.author} userId={postAuthorId} />
             </div>
             <div className="flex flex-col justify-center">
               <span className="font-bold text-[#D7DADC] hover:underline cursor-pointer text-sm">
@@ -203,13 +221,13 @@ export function PostDetail({ post }: { post: Post }) {
               </span>
               <span className="text-xs text-[#82959B] flex items-center relative group/user hover:z-[100]">
                 <Link
-                  to={`/user/${post.authorId || post.author}`}
+                  to={`/user/${postAuthorId}`}
                   className="hover:text-[#D7DADC] hover:underline transition"
                 >
                   u/{post.author}
                 </Link>
                 <span className="ml-1">• {post.timeAgo}</span>
-                <UserHoverCard username={post.author} />
+                <UserHoverCard username={post.author} userId={postAuthorId} />
               </span>
             </div>
           </div>
@@ -429,9 +447,11 @@ export function PostDetail({ post }: { post: Post }) {
               key={comment.comment_id}
               comment={comment}
               post_id={post.id}
+              content_user_id={postAuthorId}
+              scene={postScene}
             />
           ))
-        ) : post.commentList && post.commentList.length > 0 ? (
+        ) : isMockEnabled && post.commentList && post.commentList.length > 0 ? (
           // fallback to mock comments if api returns empty but we have mock ones
           post.commentList.map((comment) => (
             <CommentThread key={comment.id} comment={comment} />
@@ -453,8 +473,10 @@ export function PostDetail({ post }: { post: Post }) {
 const RealCommentThread: FC<{
   comment: CommentItem;
   post_id: string;
+  content_user_id: string;
+  scene: "ARTICLE" | "VIDEO";
   parent_id?: string;
-}> = ({ comment, post_id, parent_id }) => {
+}> = ({ comment, post_id, content_user_id, scene, parent_id }) => {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
   const { user, setAuthModalOpen } = useAuthStore();
@@ -502,6 +524,7 @@ const RealCommentThread: FC<{
       } else {
         await interactionApi.like({
           content_id: comment.comment_id,
+          content_user_id: comment.user_id,
           scene: "COMMENT",
         });
       }
@@ -529,6 +552,8 @@ const RealCommentThread: FC<{
     mutationFn: (text: string) =>
       interactionApi.postComment({
         content_id: post_id,
+        content_user_id,
+        scene,
         comment: text,
         parent_id: comment.comment_id,
         root_id: actualRootId,
@@ -561,6 +586,7 @@ const RealCommentThread: FC<{
       interactionApi.deleteComment({
         comment_id: comment.comment_id,
         content_id: post_id,
+        scene,
         parent_id: parent_id,
         root_id: actualRootId,
       }),
@@ -576,7 +602,7 @@ const RealCommentThread: FC<{
     <div className="flex gap-2 group">
       <div className="flex flex-col items-center">
         <div className="relative group/user z-30 pointer-events-auto mb-2 hover:z-[100]">
-          <Link to={`/user/${comment.user_name || "unknown"}`} className="block h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E]">
+          <Link to={`/user/${comment.user_id}`} className="block h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-[#2A3C42] border border-[#34444E]">
             <img
               src={
                 comment.user_avatar ||
@@ -585,7 +611,10 @@ const RealCommentThread: FC<{
               className="h-full w-full object-cover"
             />
           </Link>
-          <UserHoverCard username={comment.user_name || "unknown"} />
+          <UserHoverCard
+            username={comment.user_name || "unknown"}
+            userId={comment.user_id}
+          />
         </div>
         {isRoot && repliesData?.comments && repliesData.comments.length > 0 && (
           <div className="flex-1 w-px bg-[#34444E] my-1 rounded-full group-hover:bg-[#82959B] transition"></div>
@@ -596,12 +625,15 @@ const RealCommentThread: FC<{
         <div className="flex items-center gap-2 mb-1">
           <div className="relative group/user w-max block z-20 pointer-events-auto hover:z-[100]">
             <Link
-              to={`/user/${comment.user_name || "unknown"}`}
+              to={`/user/${comment.user_id}`}
               className="text-xs font-bold text-[#D7DADC] hover:underline"
             >
               {comment.user_name || "Unknown User"}
             </Link>
-            <UserHoverCard username={comment.user_name || "unknown"} />
+            <UserHoverCard
+              username={comment.user_name || "unknown"}
+              userId={comment.user_id}
+            />
           </div>
           <span className="text-[10px] text-[#82959B]">
             — {new Date(comment.created_at * 1000).toLocaleDateString()}
@@ -723,6 +755,8 @@ const RealCommentThread: FC<{
                 key={reply.comment_id}
                 comment={reply}
                 post_id={post_id}
+                content_user_id={content_user_id}
+                scene={scene}
                 parent_id={actualRootId}
               />
             ))}
@@ -749,7 +783,10 @@ const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
               alt="avatar"
             />
           </Link>
-          <UserHoverCard username={comment.author} />
+          <UserHoverCard
+            username={comment.author}
+            userId={comment.authorId}
+          />
         </div>
         <div className="flex-1 w-px bg-[#34444E] my-1 rounded-full group-hover:bg-[#82959B] transition"></div>
       </div>
@@ -764,7 +801,10 @@ const CommentThread: FC<{ comment: Comment }> = ({ comment }) => {
             >
               u/{comment.author}
             </Link>
-            <UserHoverCard username={comment.author} />
+            <UserHoverCard
+              username={comment.author}
+              userId={comment.authorId}
+            />
           </div>
           <span className="text-[10px] text-[#82959B]">
             — {comment.timeAgo}

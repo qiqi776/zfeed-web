@@ -1,6 +1,6 @@
 import MockAdapter from "axios-mock-adapter";
 import { api } from "./axios";
-import { MOckPosts, generateMorePosts } from "../data/mockData";
+import { MOckPosts, Post, generateMorePosts } from "../data/mockData";
 import { useAuthStore } from "../store/useAuthStore";
 
 export function setupMockApi() {
@@ -310,7 +310,7 @@ export function setupMockApi() {
       imageUrl: cover || "",
       upvotes: "0",
       comments: "0",
-      time: "just now",
+      timeAgo: "just now",
       contentType: 10,
     };
     MOckPosts.unshift(newPost);
@@ -334,7 +334,7 @@ export function setupMockApi() {
       imageUrl: cover_url || "",
       upvotes: "0",
       comments: "0",
-      time: "just now",
+      timeAgo: "just now",
       contentType: 20,
     };
     MOckPosts.unshift(newPost);

@@ -6,8 +6,11 @@ import { Toaster } from 'sonner';
 import App from './App.tsx';
 import './index.css';
 import { setupMockApi } from './lib/mockApi';
+import { isMockEnabled } from './lib/runtimeFlags';
 
-setupMockApi();
+if (isMockEnabled) {
+  setupMockApi();
+}
 
 const queryClient = new QueryClient();
 

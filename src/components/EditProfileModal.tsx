@@ -38,7 +38,10 @@ export function EditProfileModal({
       queryClient.invalidateQueries({
         queryKey: ["userProfile", profile.user_id],
       });
-      updateAuthUser({ nickname: data.nickname, avatar: data.avatar });
+      updateAuthUser({
+        nickname: data.user_info.nickname,
+        avatar: data.user_info.avatar,
+      });
       toast.success("Profile updated");
       onClose();
     },

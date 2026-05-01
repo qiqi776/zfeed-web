@@ -1,4 +1,5 @@
 import { api } from "../lib/axios";
+import { normalizeId } from "../lib/ids";
 
 export interface UserProfileCounts {
   followee_count: number;
@@ -23,9 +24,68 @@ export interface UserProfileResponse {
   };
 }
 
+export interface FollowListItem {
+  user_id: string;
+  nickname: string;
+  avatar: string;
+  bio: string;
+  is_following: boolean;
+}
+
+export interface FollowListResponse {
+  items: FollowListItem[];
+  next_cursor: string;
+  has_more: boolean;
+}
+
+interface RawUserProfileResponse extends Omit<UserProfileResponse, "user_profile"> {
+  user_profile: Omit<UserProfileResponse["user_profile"], "user_id"> & {
+    user_id: string | number;
+  };
+}
+
+interface UpdateProfileResponse {
+  user_info: {
+    user_id: string;
+    mobile: string;
+    nickname: string;
+    avatar: string;
+    bio: string;
+    gender: number;
+    status: number;
+    email: string;
+    birthday: number;
+  };
+}
+
+interface RawUpdateProfileResponse extends Omit<UpdateProfileResponse, "user_info"> {
+  user_info: Omit<UpdateProfileResponse["user_info"], "user_id"> & {
+    user_id: string | number;
+  };
+}
+
+interface RawFollowListItem extends Omit<FollowListItem, "user_id"> {
+  user_id: string | number;
+}
+
+interface RawFollowListResponse {
+  items: RawFollowListItem[];
+  next_cursor: string | number;
+  has_more: boolean;
+}
+
 export const userApi = {
   getProfile: async (userId: string): Promise<UserProfileResponse> => {
-    return api.get(`/user/profile/${userId}`);
+    const data = (await api.get(
+      `/user/profile/${userId}`,
+    )) as RawUserProfileResponse;
+    return {
+      ...data,
+      user_profile: {
+        ...data.user_profile,
+        user_id: normalizeId(data.user_profile.user_id),
+      },
+    };
   },
 
   followUser: async (
@@ -44,8 +104,19 @@ export const userApi = {
     nickname?: string;
     bio?: string;
     avatar?: string;
-  }): Promise<any> => {
-    return api.put("/users/me/profile", data);
+  }): Promise<UpdateProfileResponse> => {
+    const response = (await api.put(
+      "/users/me/profile",
+      data,
+    )) as RawUpdateProfileResponse;
+
+    return {
+      ...response,
+      user_info: {
+        ...response.user_info,
+        user_id: normalizeId(response.user_info.user_id),
+      },
+    };
   },
 
   uploadAvatar: async (
@@ -62,17 +133,43 @@ export const userApi = {
 
   getFollowings: async (params: {
     user_id: string;
-    cursor?: string;
+    cursor?: string | number;
     page_size?: number;
-  }): Promise<{ items: any[]; next_cursor: string; has_more: boolean }> => {
-    return api.post("/user/followings", params);
+  }): Promise<FollowListResponse> => {
+    const response = (await api.post("/user/followings", {
+      ...params,
+      cursor:
+        params.cursor === undefined || params.cursor === "" ? undefined : Number(params.cursor),
+    })) as RawFollowListResponse;
+
+    return {
+      items: response.items.map((item) => ({
+        ...item,
+        user_id: normalizeId(item.user_id),
+      })),
+      next_cursor: normalizeId(response.next_cursor),
+      has_more: response.has_more,
+    };
   },
 
   getFollowers: async (params: {
     user_id: string;
-    cursor?: string;
+    cursor?: string | number;
     page_size?: number;
-  }): Promise<{ items: any[]; next_cursor: string; has_more: boolean }> => {
-    return api.post("/user/followers", params);
+  }): Promise<FollowListResponse> => {
+    const response = (await api.post("/user/followers", {
+      ...params,
+      cursor:
+        params.cursor === undefined || params.cursor === "" ? undefined : Number(params.cursor),
+    })) as RawFollowListResponse;
+
+    return {
+      items: response.items.map((item) => ({
+        ...item,
+        user_id: normalizeId(item.user_id),
+      })),
+      next_cursor: normalizeId(response.next_cursor),
+      has_more: response.has_more,
+    };
   },
 };

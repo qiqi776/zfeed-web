@@ -1,6 +1,7 @@
 export interface Comment {
   id: string;
   author: string;
+  authorId?: string;
   content: string;
   upvotes: string;
   timeAgo: string;

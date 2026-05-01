@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { contentApi } from "../api/content";
+import {
+  VISIBILITY_PUBLIC,
+  isValidHttpUrl,
+} from "../lib/contentMeta";
 import { toast } from "sonner";
 import { useAuthStore } from "../store/useAuthStore";
 
@@ -20,13 +24,14 @@ export function CreatePost() {
 
   const publishArticleMutation = useMutation({
     mutationFn: () => contentApi.publishArticle({
-      title,
-      content,
-      cover: coverUrl || undefined,
+      title: title.trim(),
+      content: content.trim(),
+      cover: coverUrl.trim(),
+      visibility: VISIBILITY_PUBLIC,
     }),
     onSuccess: (data) => {
       toast.success("Article published successfully!");
-      queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
       if (user) {
          queryClient.invalidateQueries({ queryKey: ['userFeed', user.user_id] });
       }
@@ -39,13 +44,14 @@ export function CreatePost() {
 
   const publishVideoMutation = useMutation({
     mutationFn: () => contentApi.publishVideo({
-      title,
-      video_url: videoUrl,
-      cover_url: coverUrl || "",
+      title: title.trim(),
+      video_url: videoUrl.trim(),
+      cover_url: coverUrl.trim(),
+      visibility: VISIBILITY_PUBLIC,
     }),
     onSuccess: (data) => {
       toast.success("Video published successfully!");
-      queryClient.invalidateQueries({ queryKey: ['recommendFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
       if (user) {
          queryClient.invalidateQueries({ queryKey: ['userFeed', user.user_id] });
       }
@@ -64,13 +70,25 @@ export function CreatePost() {
     }
     
     if (postType === "article") {
+      if (!content.trim()) {
+        toast.error("Article content is required");
+        return;
+      }
+      if (!coverUrl.trim()) {
+        toast.error("Cover image URL is required for articles");
+        return;
+      }
+      if (!isValidHttpUrl(coverUrl.trim())) {
+        toast.error("Please enter a valid cover image URL (http:// or https://)");
+        return;
+      }
       publishArticleMutation.mutate();
     } else {
       if (!videoUrl.trim()) {
         toast.error("Video URL is required");
         return;
       }
-      if (!/^https?:\/\//i.test(videoUrl.trim())) {
+      if (!isValidHttpUrl(videoUrl.trim())) {
          toast.error("Please enter a valid video URL (http:// or https://)");
          return;
       }
@@ -88,6 +106,10 @@ export function CreatePost() {
       
       if (!coverUrl.trim()) {
         toast.error("Cover Image URL is required for videos");
+        return;
+      }
+      if (!isValidHttpUrl(coverUrl.trim())) {
+        toast.error("Please enter a valid cover image URL (http:// or https://)");
         return;
       }
       publishVideoMutation.mutate();
@@ -152,7 +174,7 @@ export function CreatePost() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full bg-[#000000] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] font-bold text-lg focus:outline-none focus:ring-1 focus:ring-[#82959B]"
-            maxLength={300}
+            maxLength={100}
           />
           
           <AnimatePresence mode="popLayout">
@@ -165,7 +187,7 @@ export function CreatePost() {
                 className="flex flex-col gap-2"
               >
                 <textarea
-                  placeholder="Text (optional)"
+                  placeholder="Write your article content"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   className="w-full bg-[#000000] border border-[#34444E] rounded-md px-4 py-3 text-[#D7DADC] min-h-[200px] focus:outline-none focus:ring-1 focus:ring-[#82959B] resize-y"
@@ -192,7 +214,7 @@ export function CreatePost() {
 
           <div className="flex flex-col gap-2 mt-4">
              <label className="text-sm text-[#82959B] font-semibold flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" /> Cover Image URL (optional)
+                <ImageIcon className="w-4 h-4" /> Cover Image URL (required)
              </label>
              <input
                type="text"

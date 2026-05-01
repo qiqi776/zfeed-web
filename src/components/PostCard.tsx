@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { interactionApi } from "../api/interaction";
 import { contentApi } from "../api/content";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { getInteractionSceneFromContentType } from "../lib/contentMeta";
 
 interface PostCardProps {
   post: Post;
@@ -25,6 +26,8 @@ interface PostCardProps {
 export function PostCard({ post }: PostCardProps) {
   const { user, setAuthModalOpen } = useAuthStore();
   const queryClient = useQueryClient();
+  const postScene = getInteractionSceneFromContentType(post.contentType);
+  const postAuthorId = post.authorId || post.author;
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [isDownvoted, setIsDownvoted] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(
@@ -45,7 +48,7 @@ export function PostCard({ post }: PostCardProps) {
       if (isLiked) {
         setIsLiked(false);
         setUpvoteCount((prev) => prev - 1);
-        await interactionApi.unlike({ content_id: post.id, scene: "ARTICLE" });
+        await interactionApi.unlike({ content_id: post.id, scene: postScene });
       } else {
         setIsLiked(true);
         if (isDownvoted) {
@@ -54,7 +57,11 @@ export function PostCard({ post }: PostCardProps) {
         } else {
           setUpvoteCount((prev) => prev + 1);
         }
-        await interactionApi.like({ content_id: post.id, scene: "ARTICLE" });
+        await interactionApi.like({
+          content_id: post.id,
+          content_user_id: postAuthorId,
+          scene: postScene,
+        });
       }
     } catch (err) {
       setIsLiked(!isLiked);
@@ -80,7 +87,7 @@ export function PostCard({ post }: PostCardProps) {
         setIsLiked(false);
         setUpvoteCount((prev) => prev - 2);
         interactionApi
-          .unlike({ content_id: post.id, scene: "ARTICLE" })
+          .unlike({ content_id: post.id, scene: postScene })
           .catch(() => {});
       } else {
         setUpvoteCount((prev) => prev - 1);
@@ -101,14 +108,15 @@ export function PostCard({ post }: PostCardProps) {
         setIsFavorited(false);
         await interactionApi.unfavorite({
           content_id: post.id,
-          scene: "ARTICLE",
+          scene: postScene,
         });
         toast.success("Post removed from favorites");
       } else {
         setIsFavorited(true);
         await interactionApi.favorite({
           content_id: post.id,
-          scene: "ARTICLE",
+          content_user_id: postAuthorId,
+          scene: postScene,
         });
         toast.success("Post saved to favorites");
       }
@@ -121,7 +129,7 @@ export function PostCard({ post }: PostCardProps) {
   const deletePostMutation = useMutation({
     mutationFn: () => contentApi.deletePost(post.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommendFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
       queryClient.invalidateQueries({ queryKey: ["userFeed"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       toast.success("Post deleted");
@@ -164,7 +172,7 @@ export function PostCard({ post }: PostCardProps) {
                 />
               )}
             </Link>
-            <UserHoverCard username={post.author} />
+            <UserHoverCard username={post.author} userId={postAuthorId} />
           </div>
           <div className="flex items-center gap-1 whitespace-nowrap">
             <span className="font-bold text-[#D7DADC] hover:underline cursor-pointer relative z-10 pointer-events-auto">
@@ -180,7 +188,7 @@ export function PostCard({ post }: PostCardProps) {
               >
                 u/{post.author}
               </Link>
-              <UserHoverCard username={post.author} />
+              <UserHoverCard username={post.author} userId={postAuthorId} />
             </div>
             <span className="opacity-50"> {post.timeAgo}</span>
           </div>
